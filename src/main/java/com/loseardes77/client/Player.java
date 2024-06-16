@@ -15,12 +15,12 @@ public class Player extends JButton {
     private double instantSpeed;
     private final int maxSpeed = 5;
     private final double diagonalSpeed = 0.7071067811865476 * maxSpeed; // Math.cos(Math.PI/4) * maxSpeed;
-    private final byte[] inputMap = new byte[2];
+    private final boolean[] inputMap = new boolean[4]; // w, a, s, d
     private final Game game;
     private boolean exitThreads = false;
     private Thread inputThread;
     private KeyEventDispatcher keyEventDispatcher;
-    private short health = 100;
+    private byte health = 100;
 
     private boolean isLightColor(Color color) {
         float[] hsb = new float[3];
@@ -40,14 +40,14 @@ public class Player extends JButton {
         this.game = game;
         setFocusable(false);
         setBackground(playerColor);
-        setText("·_·");
+        setText("😊");
     }
 
-    public short getHealth(){
+    public byte getHealth(){
         return health;
     }
 
-    public void setHealth(short health){
+    public void setHealth(byte health){
         this.health = health;
     }
 
@@ -88,42 +88,32 @@ public class Player extends JButton {
         keyEventDispatcher = (e) -> {
             if (e.getID() == KeyEvent.KEY_PRESSED) {
                 if (e.getKeyCode() == KeyEvent.VK_W)
-                    if(inputMap[0] < 1)
-                        inputMap[0] += 1;
+                    inputMap[0] = true;
 
                 if (e.getKeyCode() == KeyEvent.VK_S)
-                    if(inputMap[0] > -1)
-                        inputMap[0] -= 1;
+                    inputMap[2] = true;
 
 
                 if (e.getKeyCode() == KeyEvent.VK_A)
-                    if(inputMap[1] < 1)
-                        inputMap[1] += 1;
-
+                    inputMap[1] = true;
 
                 if (e.getKeyCode() == KeyEvent.VK_D)
-                    if(inputMap[1] > -1)
-                        inputMap[1] -= 1;
+                    inputMap[3] = true;
 
 
             }
             if (e.getID() == KeyEvent.KEY_RELEASED) {
                 if (e.getKeyCode() == KeyEvent.VK_W)
-                    if (inputMap[0] > -1)
-                        inputMap[0] -= 1;
+                    inputMap[0] = false;
 
                 if (e.getKeyCode() == KeyEvent.VK_S)
-                    if (inputMap[0] < 1)
-                        inputMap[0] += 1;
+                    inputMap[2] = false;
 
                 if (e.getKeyCode() == KeyEvent.VK_A)
-                    if (inputMap[1] > -1)
-                        inputMap[1] -= 1;
+                    inputMap[1] = false;
 
                 if (e.getKeyCode() == KeyEvent.VK_D)
-                    if (inputMap[1] < 1)
-                        inputMap[1] += 1;
-
+                    inputMap[3] = false;
             }
             return false;
         };
@@ -143,21 +133,21 @@ public class Player extends JButton {
     public void startMovingPLayer(){
        inputThread = new Thread(() -> {
             while (!exitThreads) {
-                if (inputMap[0] != 0 && inputMap[1] != 0)
+                if ((inputMap[0] && inputMap[1]) || (inputMap[0] && inputMap[3]) || (inputMap[2] && inputMap[1]) || (inputMap[2] && inputMap[3]))
                     instantSpeed = diagonalSpeed;
                 else
                     instantSpeed = maxSpeed;
 
-                if (inputMap[0] == 1)
+                if (inputMap[0] && !inputMap[2]) // w
                     movePlayer(Direction.UP, instantSpeed);
 
-                if (inputMap[0] == -1)
+                if (inputMap[2] && !inputMap[0]) // s
                     movePlayer(Direction.DOWN, instantSpeed);
 
-                if (inputMap[1] == 1)
+                if (inputMap[1] && !inputMap[3]) // a
                     movePlayer(Direction.LEFT, instantSpeed);
 
-                if (inputMap[1] == -1)
+                if (inputMap[3] && !inputMap[1]) // d
                     movePlayer(Direction.RIGHT, instantSpeed);
                 try{
                     Thread.sleep(sleepTime);

@@ -99,7 +99,7 @@ public class Enemy extends JButton {
                 }
 
                 if (game.getPlayer().getBounds().intersects(getBounds())) {
-                    game.getPlayer().setHealth((short) (game.getPlayer().getHealth() - 10));
+                    game.getPlayer().setHealth((byte) (game.getPlayer().getHealth() - 10));
                     info("Player health: " + game.getPlayer().getHealth());
                     setLocation(genRandomPosition().getLocation());
                     this.direction = game.getRandom().nextBoolean();
