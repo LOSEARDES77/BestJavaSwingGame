@@ -51,6 +51,21 @@ public class Player extends JButton {
         this.health = health;
     }
 
+	/**
+	 * Moves the player to a new position
+	 * @param x 
+	 * @param y
+	 * @return {@code true} if the player moved sucessfuly to the new position
+	 */
+	public boolean teleport(int x, int y) {
+		if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this)) {
+			return false;
+		} else {
+			setLocation(x, y);
+			return true;
+		}
+	}
+
     public void movePlayer(Direction dir, double speed){
         int original_x = getX();
         int original_y = getY();
