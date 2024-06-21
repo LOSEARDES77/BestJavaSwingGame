@@ -12,9 +12,7 @@ import java.awt.event.KeyEvent;
 public class Player extends JButton {
 
     private final int sleepTime = 10;
-    private double instantSpeed;
-    private final int maxSpeed = 5;
-    private final double diagonalSpeed = 0.7071067811865476 * maxSpeed; // Math.cos(Math.PI/4) * maxSpeed;
+    private final int speed = 5;
     private final boolean[] inputMap = new boolean[4]; // w, a, s, d
     private final Game game;
     private boolean exitThreads = false;
@@ -51,33 +49,50 @@ public class Player extends JButton {
         this.health = health;
     }
 
-    public void movePlayer(Direction dir, double speed){
-        int original_x = getX();
-        int original_y = getY();
-        int x = original_x;
-        int y = original_y;
+	/**
+	 * Moves the player to a new position
+	 * @param x 
+	 * @param y
+	 * @return {@code true} if the player moved sucessfuly to the new position
+	 */
+	public boolean teleport(int x, int y) {
+		if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this)) {
+			return false;
+		} else {
+			setLocation(x, y);
+			return true;
+		}
+	}
 
-        switch (dir) {
-            case UP:
-                y -= (int) Math.round(speed);
-                break;
-            case DOWN:
-                y += (int) Math.round(speed);
-                break;
-            case LEFT:
-                x -= (int) Math.round(speed);
-                break;
-            case RIGHT:
-                x += (int) Math.round(speed);
-                break;
+    public void movePlayer(int dX, int dY){
+        int x = getX();
+        int y = getY();
+		
+        boolean moved = teleport(x + dX, y + dY);
+
+        if (!moved) {
+            // Try moving only horizontally
+            if (dX != 0 && teleport(x + dX, y)) return;
+
+            // Try moving only vertically
+            if (dY != 0 && teleport(x, y + dY)) return;
         }
-        if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this))
-            return;
+    }
 
-        setLocation(x, y);
+    public double movementAngle() {
+        int dX = 0;
+        int dY = 0;
 
-        if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this))
-            setLocation(original_x, original_y);
+        if (inputMap[0]) dY--; // W
+        if (inputMap[2]) dY++; // S
+        if (inputMap[1]) dX--; // A
+        if (inputMap[3]) dX++; // D
+
+        if (dX == 0 && dY == 0) {
+            return -1; // No movement
+        }
+
+        return Math.atan2(dY, dX);
     }
 
     public void stopInputDetection(){
@@ -86,34 +101,22 @@ public class Player extends JButton {
 
     public void startInputDetection(){
         keyEventDispatcher = (e) -> {
-            if (e.getID() == KeyEvent.KEY_PRESSED) {
+            if (e.getID() == KeyEvent.KEY_PRESSED || e.getID() == KeyEvent.KEY_RELEASED) {
+				boolean eventType = e.getID() == KeyEvent.KEY_PRESSED;
+				
                 if (e.getKeyCode() == KeyEvent.VK_W)
-                    inputMap[0] = true;
+                    inputMap[0] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_S)
-                    inputMap[2] = true;
-
-
-                if (e.getKeyCode() == KeyEvent.VK_A)
-                    inputMap[1] = true;
-
-                if (e.getKeyCode() == KeyEvent.VK_D)
-                    inputMap[3] = true;
-
-
-            }
-            if (e.getID() == KeyEvent.KEY_RELEASED) {
-                if (e.getKeyCode() == KeyEvent.VK_W)
-                    inputMap[0] = false;
-
-                if (e.getKeyCode() == KeyEvent.VK_S)
-                    inputMap[2] = false;
+                    inputMap[2] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_A)
-                    inputMap[1] = false;
+                    inputMap[1] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_D)
-                    inputMap[3] = false;
+					inputMap[3] = eventType;
+
+
             }
             return false;
         };
@@ -133,24 +136,18 @@ public class Player extends JButton {
     public void startMovingPLayer(){
        inputThread = new Thread(() -> {
             while (!exitThreads) {
-                if ((inputMap[0] && inputMap[1]) || (inputMap[0] && inputMap[3]) || (inputMap[2] && inputMap[1]) || (inputMap[2] && inputMap[3]))
-                    instantSpeed = diagonalSpeed;
-                else
-                    instantSpeed = maxSpeed;
 
-                if (inputMap[0] && !inputMap[2]) // w
-                    movePlayer(Direction.UP, instantSpeed);
+				double theta = movementAngle();
 
-                if (inputMap[2] && !inputMap[0]) // s
-                    movePlayer(Direction.DOWN, instantSpeed);
+				if (theta != -1) {
+					double sX = speed * Math.cos(theta);
+					double sY = speed * Math.sin(theta);
 
-                if (inputMap[1] && !inputMap[3]) // a
-                    movePlayer(Direction.LEFT, instantSpeed);
+					movePlayer((int) sX, (int) sY);
+				}
 
-                if (inputMap[3] && !inputMap[1]) // d
-                    movePlayer(Direction.RIGHT, instantSpeed);
                 try{
-                    Thread.sleep(sleepTime);
+                    Thread.sleep(sleepTime); //  MAYBE Use delta time to figure out when to check the input
                 } catch (InterruptedException _) {
 
                 }

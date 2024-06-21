@@ -98,7 +98,7 @@ public class Enemy extends JButton {
                     this.axis = !axis;
                 }
 
-                if (game.getPlayer().getBounds().intersects(getBounds())) {
+                if (game.getPlayer().getBounds().intersects(getBounds())) { //  FIXME Works when player collides with enemy but not backwards
                     game.getPlayer().setHealth((byte) (game.getPlayer().getHealth() - 10));
                     info("Player health: " + game.getPlayer().getHealth());
                     setLocation(genRandomPosition().getLocation());
