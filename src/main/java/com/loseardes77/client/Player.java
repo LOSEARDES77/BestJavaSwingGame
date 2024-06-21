@@ -139,8 +139,6 @@ public class Player extends JButton {
 
 				double theta = movementAngle();
 
-				// NEXT Now when trying to move into a wall and to the side, both movements will be canceled instead of just the one that isn't posible
-
 				if (theta != -1) {
 					double sX = speed * Math.cos(theta);
 					double sY = speed * Math.sin(theta);
