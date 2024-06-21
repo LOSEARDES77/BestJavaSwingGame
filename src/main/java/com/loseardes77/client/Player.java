@@ -93,33 +93,22 @@ public class Player extends JButton {
 
     public void startInputDetection(){
         keyEventDispatcher = (e) -> {
-            if (e.getID() == KeyEvent.KEY_PRESSED) {
+            if (e.getID() == KeyEvent.KEY_PRESSED || e.getID() == KeyEvent.KEY_RELEASED) {
+				boolean eventType = e.getID() == KeyEvent.KEY_PRESSED;
+				
                 if (e.getKeyCode() == KeyEvent.VK_W)
-                    inputMap[0] = true;
+                    inputMap[0] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_S)
-                    inputMap[2] = true;
+                    inputMap[2] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_A)
-                    inputMap[1] = true;
+                    inputMap[1] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_D)
-                    inputMap[3] = true;
+					inputMap[3] = eventType;
 
 
-            }
-            if (e.getID() == KeyEvent.KEY_RELEASED) {
-                if (e.getKeyCode() == KeyEvent.VK_W)
-                    inputMap[0] = false;
-
-                if (e.getKeyCode() == KeyEvent.VK_S)
-                    inputMap[2] = false;
-
-                if (e.getKeyCode() == KeyEvent.VK_A)
-                    inputMap[1] = false;
-
-                if (e.getKeyCode() == KeyEvent.VK_D)
-                    inputMap[3] = false;
             }
             return false;
         };
