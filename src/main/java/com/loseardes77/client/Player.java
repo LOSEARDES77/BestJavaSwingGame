@@ -68,7 +68,15 @@ public class Player extends JButton {
         int x = getX();
         int y = getY();
 		
-		teleport(x + dX, y + dY);
+        boolean moved = teleport(x + dX, y + dY);
+
+        if (!moved) {
+            // Try moving only horizontally
+            if (dX != 0 && teleport(x + dX, y)) return;
+
+            // Try moving only vertically
+            if (dY != 0 && teleport(x, y + dY)) return;
+        }
     }
 
     public double movementAngle() {
