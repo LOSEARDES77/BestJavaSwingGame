@@ -7,15 +7,15 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import com.loseardes77.client.SinglePlayer;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class MainMenu extends JFrame {
 
     private final int[] windowDimensions = {800, 500};
-    private final JPanel menuPanel;
+    private final JPanel mainMenuPanel;
+    private final JPanel multiplayerSelectorPanel;
 
     public MainMenu() {
         setTitle("Main Menu");
@@ -25,28 +25,27 @@ public class MainMenu extends JFrame {
         setResizable(false);
         setUndecorated(true);
 
-        menuPanel = new JPanel(new BorderLayout());
-        add(menuPanel);
+        mainMenuPanel = new JPanel(new BorderLayout());
 
         JLabel title = new JLabel("Best Java Swing Game");
-        menuPanel.add(title);
+        mainMenuPanel.add(title);
         title.setFont(new Font("Arial", Font.BOLD, 40));
         title.setBounds(170, 20, 500, 100);
 
         JButton singlePlayer = new JButton("Single Player");
-        menuPanel.add(singlePlayer);
+        mainMenuPanel.add(singlePlayer);
         singlePlayer.setBounds(210, 180, 350, 60);
         singlePlayer.setFont(new Font("Arial", Font.BOLD, 18));
         singlePlayer.addActionListener(_ -> startSinglePlayer());
 
         JButton multiPlayer = new JButton("Multi Player");
-        menuPanel.add(multiPlayer);
+        mainMenuPanel.add(multiPlayer);
         multiPlayer.setBounds(210, 270, 350, 60);
         multiPlayer.setFont(new Font("Arial", Font.BOLD, 18));
         multiPlayer.addActionListener(_ -> startMultiplayer());
 
         JButton quit = new JButton("Quit");
-        menuPanel.add(quit);
+        mainMenuPanel.add(quit);
         quit.setBounds(210, 360, 350, 60);
         quit.setFont(new Font("Arial", Font.BOLD, 18));
 
@@ -60,24 +59,44 @@ public class MainMenu extends JFrame {
             }
         });
 
-        menuPanel.add(new JLabel(" "));
+        mainMenuPanel.add(new JLabel(" "));
+
+        multiplayerSelectorPanel = new JPanel(new BorderLayout());
+
+
+
+
     }
-    public void showMenu() {
+    public void showMainMenu() {
+        setVisible(false);
+        if (!getComponent(0).equals(mainMenuPanel)) {
+            remove(multiplayerSelectorPanel);
+            add(mainMenuPanel);
+        }
         setVisible(true);
     }
 
-    public void hideMenu() {
+    public void showMultiplayerSelector() {
+        setVisible(false);
+        if (!getComponent(0).equals(multiplayerSelectorPanel)) {
+            remove(mainMenuPanel);
+            add(mainMenuPanel);
+        }
+        setVisible(true);
+    }
+
+    public void hideMenus() {
         setVisible(false);
     }
 
     public void startSinglePlayer() {
-        hideMenu();
+        hideMenus();
         SinglePlayer sp = SinglePlayer.build(this);
         sp.startGame();
     }
 
     public void startMultiplayer() {
-        hideMenu();
+        hideMenus();
         // MultiPlayer mp = MultiPlayer.build(this);
         // mp.startGame();
     }

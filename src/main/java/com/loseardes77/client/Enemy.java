@@ -3,20 +3,24 @@ package com.loseardes77.client;
 
 import com.loseardes77.common.Direction;
 import static com.loseardes77.common.Logger.info;
+import static com.loseardes77.common.Logger.warning;
+
 import javax.swing.JButton;
 
 import java.awt.Color;
 import java.awt.Rectangle;
 
 public class Enemy extends JButton {
-    private final Game game;
-    private final int sleepTime = 10;
-    private final int speed = 2;
+    private static Game game = null;
+    private static final long moveDelay = 16; // In mills (16ms)
+    private static final int speed = 2;
     private boolean exitThreads = false;
     private Thread moveThread;
 
-    public Enemy(Game game, Rectangle bounds) {
-        this.game = game;
+    public Enemy(Game gameInstance, Rectangle bounds) {
+        if (game == null) {
+            game = gameInstance;
+        }
         setText("•_•");
         setBounds(bounds);
         setBackground(new Color(255, 50, 50));
@@ -47,28 +51,19 @@ public class Enemy extends JButton {
     }
 
     public void startMove(){
-        moveThread = new Movement();
-        moveThread.start();
-    }
+        moveThread = new Thread(() -> {
+            boolean axis = game.getRandom().nextBoolean();
+            boolean direction = game.getRandom().nextBoolean();
 
-    private class Movement extends Thread {
-        private boolean axis; // true move x | false move y
-        private boolean direction; // true positive | false negative
-
-        public Movement() {
-            this.axis = game.getRandom().nextBoolean();
-            this.direction = game.getRandom().nextBoolean();
-        }
-
-        @Override
-        public void run() {
             int counter = 0;
             int change = 0;
             boolean result;
             while (!exitThreads) {
+                long startTime = System.currentTimeMillis();
+
                 if (counter++ > change) {
-                    this.axis = game.getRandom().nextBoolean();
-                    this.direction = game.getRandom().nextBoolean();
+                    axis = game.getRandom().nextBoolean();
+                    direction = game.getRandom().nextBoolean();
                     counter = 0;
                     change = game.getRandom().nextInt(500) + 100;
                 }
@@ -94,24 +89,39 @@ public class Enemy extends JButton {
                     }
                 }
                 if (result) {
-                    this.direction = !direction;
-                    this.axis = !axis;
+                    direction = !direction;
+                    axis = !axis;
                 }
 
-                if (game.getPlayer().getBounds().intersects(getBounds())) { //  FIXME Works when player collides with enemy but not backwards
-                    game.getPlayer().setHealth((byte) (game.getPlayer().getHealth() - 10));
+                if (game.getPlayer().getBounds().intersects(getBounds())) {
+                    byte health = (byte) (game.getPlayer().getHealth() - 10);
+                    if (health <= 0) {
+                        game.end(false);
+                    }
+                    game.getPlayer().setHealth(health);
+                    game.updateHealthLabel(health);
                     info("Player health: " + game.getPlayer().getHealth());
                     setLocation(genRandomPosition().getLocation());
-                    this.direction = game.getRandom().nextBoolean();
-                    this.axis = game.getRandom().nextBoolean();
+                    direction = game.getRandom().nextBoolean();
+                    axis = game.getRandom().nextBoolean();
                 }
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    System.out.println(e.getMessage());
+
+                long elapsedTime = System.currentTimeMillis() - startTime;
+
+                if (elapsedTime < moveDelay) {
+                    try {
+                        Thread.sleep(moveDelay - elapsedTime);
+                    }catch (InterruptedException _){
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
+                if (elapsedTime > moveDelay) {
+                    warning("Enemy movment took too long (" + (elapsedTime - moveDelay) + "ms more)");
                 }
             }
-        }
+        });
+        moveThread.start();
     }
 
     private boolean moveEnemy(Direction d) {
@@ -134,7 +144,7 @@ public class Enemy extends JButton {
                 break;
         }
         Rectangle r = new Rectangle(x, y, getWidth(), getHeight());
-        if (game.checkCollision(r, this))
+        if (game.checkCollision(r, this, game.getPlayer()))
             return true;
 
         if (game.checkCollisionWithEnemies(r, this))
@@ -142,7 +152,7 @@ public class Enemy extends JButton {
 
         setLocation(x, y);
 
-        if (game.checkCollision(r, this)) {
+        if (game.checkCollision(r, this, game.getPlayer())) {
             setLocation(original_x, original_y);
             return true;
         }

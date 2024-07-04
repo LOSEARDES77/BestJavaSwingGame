@@ -3,15 +3,12 @@ package com.loseardes77.client;
 import com.loseardes77.common.Direction;
 import javax.swing.JButton;
 
-import java.awt.Color;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 
-public class Player extends JButton {
+import static com.loseardes77.common.Logger.warning;
 
-    private final int sleepTime = 10;
+public class Player extends JButton {
     private final int speed = 5;
     private final boolean[] inputMap = new boolean[4]; // w, a, s, d
     private final Game game;
@@ -19,6 +16,7 @@ public class Player extends JButton {
     private Thread inputThread;
     private KeyEventDispatcher keyEventDispatcher;
     private byte health = 100;
+    private final long delay = 12; // In millis (12ms) tested to be decent
 
     private boolean isLightColor(Color color) {
         float[] hsb = new float[3];
@@ -38,7 +36,8 @@ public class Player extends JButton {
         this.game = game;
         setFocusable(false);
         setBackground(playerColor);
-        setText("😊");
+        setText("^_^");
+        setFont(new Font("Arial", Font.PLAIN, 10));
     }
 
     public byte getHealth(){
@@ -137,6 +136,7 @@ public class Player extends JButton {
        inputThread = new Thread(() -> {
             while (!exitThreads) {
 
+                long startTime = System.currentTimeMillis();
 				double theta = movementAngle();
 
 				if (theta != -1) {
@@ -146,10 +146,17 @@ public class Player extends JButton {
 					movePlayer((int) sX, (int) sY);
 				}
 
-                try{
-                    Thread.sleep(sleepTime); //  MAYBE Use delta time to figure out when to check the input
-                } catch (InterruptedException _) {
 
+                long elapsedTime = System.currentTimeMillis() - startTime;
+
+                if (elapsedTime < delay) {
+                    try {
+                        Thread.sleep(delay - elapsedTime);
+                    }catch (InterruptedException _){
+                        Thread.currentThread().interrupt();
+                    }
+                } else if (elapsedTime > delay) {
+                    warning("Input took too long (" + (elapsedTime - delay) + "ms more)");
                 }
             }
 

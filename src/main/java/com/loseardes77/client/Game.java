@@ -1,14 +1,16 @@
 package com.loseardes77.client;
 
-import com.loseardes77.common.Direction;
 import com.loseardes77.common.Wall;
+
+import static com.loseardes77.client.SinglePlayer.updateHealth;
 import static com.loseardes77.common.Logger.info;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+
+import javax.swing.*;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Rectangle;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -21,10 +23,12 @@ public class Game extends JPanel {
     private final ArrayList<Enemy> enemies = new ArrayList<>();
     private final Random random;
     private Player player;
+    private final SinglePlayer frame;
 
 
 
-    public Game(){
+    public Game(SinglePlayer frame){
+        this.frame = frame;
         setLayout(new BorderLayout());
         setBounds(0, 0, windowDimensions[0], windowDimensions[1]);
         add(dummy, BorderLayout.CENTER);
@@ -62,18 +66,23 @@ public class Game extends JPanel {
         return random;
     }
 
-    public boolean checkCollision(Rectangle r, Component self){
+    public boolean checkCollision(Rectangle r, Component self, Player player){
         if (r.getX() < 0 || r.getY() < 0 || r.getX() + r.getWidth() > windowDimensions[0] || r.getY() + r.getHeight() > windowDimensions[1])
             return true;
 
         for (Component comp : Objects) {
             Rectangle rect = comp.getBounds();
             if (!comp.equals(self))
-                if (r.intersects(rect))
-                    return true;
+                if (!comp.equals(player))
+                    if (r.intersects(rect))
+                        return true;
         }
 
         return false;
+    }
+
+    public boolean checkCollision(Rectangle r, Component self){
+        return checkCollision(r, self, null);
     }
 
 	public List<Component> getCollidingComponents(Component self) {
@@ -129,8 +138,13 @@ public class Game extends JPanel {
     }
 
     public void addObject(Component comp, Rectangle bounds){
-        remove(dummy);
+        addObjectWithoutCollision(comp, bounds);
         Objects.add(comp);
+
+    }
+
+    public void addObjectWithoutCollision(Component comp, Rectangle bounds){
+        remove(dummy);
         add(comp);
         comp.setBounds(bounds);
         add(dummy, BorderLayout.CENTER);
@@ -160,11 +174,22 @@ public class Game extends JPanel {
     }
 
     public void addEnemies(int amount){
+        ArrayList<Rectangle> enemies = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
-            Rectangle bounds = genRandomPosition(50);
+            Rectangle bounds = genBounds(enemies);
+            enemies.add(bounds);
             addEnemy(new Enemy(this, bounds), bounds);
-
         }
+    }
+
+    public Rectangle genBounds(List<Rectangle> rectsToAvoid){
+        Rectangle bounds = genRandomPosition(50);
+        for (Rectangle r : rectsToAvoid) {
+            if (r.intersects(bounds)){
+                return genBounds(rectsToAvoid);
+            };
+        }
+        return bounds;
     }
 
     private void addEnemy(Enemy enemy, Rectangle rectangle) {
@@ -176,4 +201,17 @@ public class Game extends JPanel {
         repaint();
     }
 
+    public void updateHealthLabel(byte val) {
+        updateHealth(val);
+    }
+
+    public void end(boolean wonGame) {
+        //  stopGame(); // TODO
+        if (wonGame){
+            JOptionPane.showMessageDialog(this, "You won!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+        }else {
+            JOptionPane.showMessageDialog(this, "You lost!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+        }
+        this.frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+    }
 }
