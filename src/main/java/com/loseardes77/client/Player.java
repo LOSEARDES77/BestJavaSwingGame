@@ -1,9 +1,11 @@
 package com.loseardes77.client;
 
-import com.loseardes77.common.Direction;
 import javax.swing.JButton;
-
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 
 import static com.loseardes77.common.Logger.warning;
@@ -12,7 +14,6 @@ public class Player extends JButton {
     private final int speed = 5;
     private final boolean[] inputMap = new boolean[4]; // w, a, s, d
     private final Game game;
-    private boolean exitThreads = false;
     private Thread inputThread;
     private KeyEventDispatcher keyEventDispatcher;
     private byte health = 100;
@@ -24,7 +25,7 @@ public class Player extends JButton {
         return hsb[2] > 0.5;
     }
 
-    public Player(boolean inputs, Game game, Color playerColor){
+    public Player(boolean inputs, Game game, Color playerColor) {
         if (inputs)
             startInputDetection();
 
@@ -40,33 +41,27 @@ public class Player extends JButton {
         setFont(new Font("Arial", Font.PLAIN, 10));
     }
 
-    public byte getHealth(){
+    public byte getHealth() {
         return health;
     }
 
-    public void setHealth(byte health){
+    public void setHealth(byte health) {
         this.health = health;
     }
 
-	/**
-	 * Moves the player to a new position
-	 * @param x 
-	 * @param y
-	 * @return {@code true} if the player moved sucessfuly to the new position
-	 */
-	public boolean teleport(int x, int y) {
-		if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this)) {
-			return false;
-		} else {
-			setLocation(x, y);
-			return true;
-		}
-	}
+    public boolean teleport(int x, int y) {
+        if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this)) {
+            return false;
+        } else {
+            setLocation(x, y);
+            return true;
+        }
+    }
 
-    public void movePlayer(int dX, int dY){
+    public void movePlayer(int dX, int dY) {
         int x = getX();
         int y = getY();
-		
+
         boolean moved = teleport(x + dX, y + dY);
 
         if (!moved) {
@@ -74,7 +69,7 @@ public class Player extends JButton {
             if (dX != 0 && teleport(x + dX, y)) return;
 
             // Try moving only vertically
-            if (dY != 0 && teleport(x, y + dY)) return;
+            if (dY != 0) teleport(x, y + dY);
         }
     }
 
@@ -94,15 +89,15 @@ public class Player extends JButton {
         return Math.atan2(dY, dX);
     }
 
-    public void stopInputDetection(){
+    public void stopInputDetection() {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keyEventDispatcher);
     }
 
-    public void startInputDetection(){
+    public void startInputDetection() {
         keyEventDispatcher = (e) -> {
             if (e.getID() == KeyEvent.KEY_PRESSED || e.getID() == KeyEvent.KEY_RELEASED) {
-				boolean eventType = e.getID() == KeyEvent.KEY_PRESSED;
-				
+                boolean eventType = e.getID() == KeyEvent.KEY_PRESSED;
+
                 if (e.getKeyCode() == KeyEvent.VK_W)
                     inputMap[0] = eventType;
 
@@ -113,7 +108,7 @@ public class Player extends JButton {
                     inputMap[1] = eventType;
 
                 if (e.getKeyCode() == KeyEvent.VK_D)
-					inputMap[3] = eventType;
+                    inputMap[3] = eventType;
 
 
             }
@@ -122,29 +117,19 @@ public class Player extends JButton {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyEventDispatcher);
     }
 
-    public void destroy(){
-        stopInputDetection();
-        exitThreads = true;
-        try {
-            inputThread.join();
-        } catch (InterruptedException e) {
-            inputThread.interrupt();
-        }
-    }
-
-    public void startMovingPLayer(){
-       inputThread = new Thread(() -> {
-            while (!exitThreads) {
+    public void startMovingPLayer() {
+        inputThread = new Thread(() -> {
+            while (!Game.exitThreads) {
 
                 long startTime = System.currentTimeMillis();
-				double theta = movementAngle();
+                double theta = movementAngle();
 
-				if (theta != -1) {
-					double sX = speed * Math.cos(theta);
-					double sY = speed * Math.sin(theta);
+                if (theta != -1) {
+                    double sX = speed * Math.cos(theta);
+                    double sY = speed * Math.sin(theta);
 
-					movePlayer((int) sX, (int) sY);
-				}
+                    movePlayer((int) sX, (int) sY);
+                }
 
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
@@ -152,14 +137,14 @@ public class Player extends JButton {
                 if (elapsedTime < delay) {
                     try {
                         Thread.sleep(delay - elapsedTime);
-                    }catch (InterruptedException _){
+                    } catch (InterruptedException _) {
                         Thread.currentThread().interrupt();
                     }
                 } else if (elapsedTime > delay) {
                     warning("Input took too long (" + (elapsedTime - delay) + "ms more)");
                 }
             }
-
+            stopInputDetection();
         });
 
         inputThread.start();

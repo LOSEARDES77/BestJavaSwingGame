@@ -1,26 +1,29 @@
 package com.loseardes77.client;
 
-import static com.loseardes77.common.Logger.error;
-import static com.loseardes77.common.Logger.info;
 import com.loseardes77.common.MainMenu;
 
-import javax.swing.*;
-
-import java.awt.*;
+import javax.swing.JColorChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import static com.loseardes77.common.Logger.error;
+import static com.loseardes77.common.Logger.info;
+
 public class SinglePlayer extends JFrame {
 
-    private MainMenu menu = null;
+    private final MainMenu menu;
 
     private Game gamePanel = null;
     private Player player = null;
-    private static JLabel healthLabel = null;
-
-    public static SinglePlayer build(MainMenu menu) {
-        return new SinglePlayer(menu);
-    }
 
     public SinglePlayer(MainMenu menuFrame) {
         setSize(1900, 1060);
@@ -35,7 +38,8 @@ public class SinglePlayer extends JFrame {
             error("No color selected for player. Exiting...");
             return;
         }
-        this.gamePanel = new Game(this);
+        JLabel healthLabel = new JLabel("100 HP");
+        this.gamePanel = new Game(this, healthLabel);
         this.player = new Player(true, gamePanel, playerColor);
         gamePanel.addPlayer(player);
 
@@ -43,12 +47,11 @@ public class SinglePlayer extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                info("Closing game");
                 destroy();
+                info("Closing game");
             }
         });
 
-        healthLabel = new JLabel("100 HP");
         healthLabel.setFont(new Font("Arial", Font.BOLD, 20));
         FontMetrics metrics = healthLabel.getFontMetrics(healthLabel.getFont());
         Dimension healthLabelSize = new Dimension(metrics.stringWidth(healthLabel.getText()), metrics.getHeight());
@@ -59,26 +62,27 @@ public class SinglePlayer extends JFrame {
         add(gamePanel);
     }
 
-    public static void updateHealth(byte newVal){
-        healthLabel.setText(String.valueOf(newVal) + " HP");
-    }
-
     public void startGame() {
+        Game.exitThreads = false;
         info("Starting game");
         setVisible(true);
         if (gamePanel != null && player != null) {
             gamePanel.startGame();
             player.startMovingPLayer();
-        }else{
+        } else {
             error("Game not started");
             destroy();
         }
     }
 
-    public void destroy(){
+    public void destroy() {
         setVisible(false);
-        gamePanel.destroy();
-        gamePanel = null;
+        for (Component c : gamePanel.getComponents()) {
+            gamePanel.remove(c);
+        }
+        for (Component component : getComponents()) {
+            remove(component);
+        }
         System.gc();
         dispose();
         menu.showMainMenu();

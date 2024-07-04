@@ -1,7 +1,7 @@
 package com.loseardes77.common;
 
 import javax.swing.JButton;
-import java.awt.*;
+import java.awt.Color;
 
 public class Wall extends JButton {
     public Wall(int x, int y, int width, int height) {

@@ -2,19 +2,17 @@ package com.loseardes77.client;
 
 
 import com.loseardes77.common.Direction;
-import static com.loseardes77.common.Logger.info;
-import static com.loseardes77.common.Logger.warning;
 
 import javax.swing.JButton;
-
 import java.awt.Color;
 import java.awt.Rectangle;
 
+import static com.loseardes77.common.Logger.warning;
+
 public class Enemy extends JButton {
-    private static Game game = null;
-    private static final long moveDelay = 16; // In mills (16ms)
-    private static final int speed = 2;
-    private boolean exitThreads = false;
+    private Game game = null;
+    private final long moveDelay = 16; // In mills (16ms)
+    private final int speed = 2;
     private Thread moveThread;
 
     public Enemy(Game gameInstance, Rectangle bounds) {
@@ -41,16 +39,7 @@ public class Enemy extends JButton {
         return r;
     }
 
-    public void destroy(){
-        exitThreads = true;
-        try {
-            moveThread.join();
-        }catch (InterruptedException e) {
-            moveThread.interrupt();
-        }
-    }
-
-    public void startMove(){
+    public void startMove() {
         moveThread = new Thread(() -> {
             boolean axis = game.getRandom().nextBoolean();
             boolean direction = game.getRandom().nextBoolean();
@@ -58,7 +47,7 @@ public class Enemy extends JButton {
             int counter = 0;
             int change = 0;
             boolean result;
-            while (!exitThreads) {
+            while (!Game.exitThreads) {
                 long startTime = System.currentTimeMillis();
 
                 if (counter++ > change) {
@@ -70,21 +59,21 @@ public class Enemy extends JButton {
                 if (axis) {
                     if (direction) {
                         if (getX() + getWidth() + 15 > game.getWidth())
-                            direction = !direction;
+                            direction = false;
                         result = moveEnemy(Direction.RIGHT);
                     } else {
                         if (getX() - 15 < 0)
-                            direction = !direction;
+                            direction = true;
                         result = moveEnemy(Direction.LEFT);
                     }
                 } else {
                     if (direction) {
                         if (getY() + getHeight() + 15 > game.getHeight())
-                            direction = !direction;
+                            direction = false;
                         result = moveEnemy(Direction.DOWN);
                     } else {
                         if (getY() - 15 < 0)
-                            direction = !direction;
+                            direction = true;
                         result = moveEnemy(Direction.UP);
                     }
                 }
@@ -95,15 +84,15 @@ public class Enemy extends JButton {
 
                 if (game.getPlayer().getBounds().intersects(getBounds())) {
                     byte health = (byte) (game.getPlayer().getHealth() - 10);
-                    if (health <= 0) {
-                        game.end(false);
-                    }
                     game.getPlayer().setHealth(health);
                     game.updateHealthLabel(health);
-                    info("Player health: " + game.getPlayer().getHealth());
                     setLocation(genRandomPosition().getLocation());
                     direction = game.getRandom().nextBoolean();
                     axis = game.getRandom().nextBoolean();
+                    if (health <= 0) {
+                        game.end(false);
+                        break;
+                    }
                 }
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
@@ -111,13 +100,13 @@ public class Enemy extends JButton {
                 if (elapsedTime < moveDelay) {
                     try {
                         Thread.sleep(moveDelay - elapsedTime);
-                    }catch (InterruptedException _){
+                    } catch (InterruptedException _) {
                         Thread.currentThread().interrupt();
                     }
                 }
 
                 if (elapsedTime > moveDelay) {
-                    warning("Enemy movment took too long (" + (elapsedTime - moveDelay) + "ms more)");
+                    warning("Enemy movement took too long (" + (elapsedTime - moveDelay) + "ms more)");
                 }
             }
         });

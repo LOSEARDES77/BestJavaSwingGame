@@ -1,15 +1,17 @@
 package com.loseardes77.common;
 
-import static com.loseardes77.common.Logger.info;
+import com.loseardes77.client.SinglePlayer;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import com.loseardes77.client.SinglePlayer;
-
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import static com.loseardes77.common.Logger.info;
 
 public class MainMenu extends JFrame {
 
@@ -42,7 +44,7 @@ public class MainMenu extends JFrame {
         mainMenuPanel.add(multiPlayer);
         multiPlayer.setBounds(210, 270, 350, 60);
         multiPlayer.setFont(new Font("Arial", Font.BOLD, 18));
-        multiPlayer.addActionListener(_ -> startMultiplayer());
+        multiPlayer.addActionListener(_ -> showMultiplayerSelector());
 
         JButton quit = new JButton("Quit");
         mainMenuPanel.add(quit);
@@ -61,12 +63,11 @@ public class MainMenu extends JFrame {
 
         mainMenuPanel.add(new JLabel(" "));
 
+        // TODO: Add the options to host or join a game and play
         multiplayerSelectorPanel = new JPanel(new BorderLayout());
 
-
-
-
     }
+
     public void showMainMenu() {
         setVisible(false);
         if (!getComponent(0).equals(mainMenuPanel)) {
@@ -91,13 +92,13 @@ public class MainMenu extends JFrame {
 
     public void startSinglePlayer() {
         hideMenus();
-        SinglePlayer sp = SinglePlayer.build(this);
+        SinglePlayer sp = new SinglePlayer(this);
         sp.startGame();
     }
 
     public void startMultiplayer() {
         hideMenus();
-        // MultiPlayer mp = MultiPlayer.build(this);
+        // MultiPlayer mp = new MultiPlayer(this)
         // mp.startGame();
     }
 }
