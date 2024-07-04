@@ -1,5 +1,6 @@
 package com.loseardes77.client;
 
+import com.loseardes77.common.Direction;
 import com.loseardes77.common.Wall;
 import static com.loseardes77.common.Logger.info;
 import javax.swing.JLabel;
@@ -9,6 +10,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Game extends JPanel {
@@ -73,6 +75,42 @@ public class Game extends JPanel {
 
         return false;
     }
+
+	public List<Component> getCollidingComponents(Component self) {
+		if (self.getX() < 0 || self.getY() < 0 || self.getX() + self.getWidth() > windowDimensions[0] || self.getY() + self.getHeight() > windowDimensions[1])
+			return null;
+		Rectangle bS = self.getBounds();
+
+		List<Component> components = new ArrayList<>();
+		
+		for (Component comp : Objects) {
+			Rectangle bC = comp.getBounds();
+
+			if (!comp.equals(self)) {
+				if (bC.intersects(bS)) {
+					components.add(comp);
+				}
+			}
+		}
+
+		return components;
+
+		
+	}
+
+	// public Direction collisionSide(Component self) {
+	// 	List<Component> components = getCollidingComponents(self);
+
+	// 	if (components != null) {
+
+	// 		for (Component comp : components) {
+	// 			Rectangle cR = comp.getBounds();
+	// 			Rectangle sR = comp.getBounds();
+	// 		}
+			
+	// 	} else
+	// 		return null;
+	// }
 
     public void destroy(){
         for (Enemy e : enemies)
