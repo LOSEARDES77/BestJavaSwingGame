@@ -55,7 +55,7 @@ public class SinglePlayer extends JFrame {
         healthLabel.setFont(new Font("Arial", Font.BOLD, 20));
         FontMetrics metrics = healthLabel.getFontMetrics(healthLabel.getFont());
         Dimension healthLabelSize = new Dimension(metrics.stringWidth(healthLabel.getText()), metrics.getHeight());
-        Point healthLabelLocation = new Point((int) (1800 - healthLabelSize.getWidth()), 100 + metrics.getHeight() / 2);
+        Point healthLabelLocation = new Point((int) ((getWidth() / 2.0) - (healthLabelSize.getWidth() / 2.0)), getHeight() - metrics.getHeight() - 100);
         gamePanel.addObjectWithoutCollision(healthLabel, new Rectangle(healthLabelLocation, healthLabelSize));
 
 

@@ -2,10 +2,14 @@ package com.loseardes77.client;
 
 import com.loseardes77.common.ThreadPool;
 import com.loseardes77.common.Wall;
+import com.loseardes77.db.HighScoreTable;
+import com.loseardes77.db.Score;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Rectangle;
@@ -14,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static com.loseardes77.common.Logger.error;
 import static com.loseardes77.common.Logger.info;
 import static com.loseardes77.common.Logger.warning;
 
@@ -36,6 +41,18 @@ public class Game extends JPanel {
         this.frame = frame;
         setLayout(new BorderLayout());
         setBounds(0, 0, windowDimensions[0], windowDimensions[1]);
+
+        DefaultTableModel model = HighScoreTable.getHighScoreTableModel();
+        if (model != null) {
+            JTable highScore = new JTable(model);
+            highScore.setSelectionBackground(getBackground());
+            highScore.setBackground(getBackground());
+            add(highScore);
+            highScore.setBounds(windowDimensions[0] - 175, 25, 150, 250);
+        } else {
+            error("Couldn't connect to the database");
+        }
+
         add(dummy, BorderLayout.CENTER);
         int seed = (int) (Math.random() * 999999) + 1;
         info("Using seed \"" + seed + "\"");
@@ -174,6 +191,10 @@ public class Game extends JPanel {
 
     public void end(boolean wonGame) {
         Game.exitThreads = true;
+        Score s = new Score();
+        s.setName(player.getName());
+        s.setScore(player.getCoinsCount());
+        s.sendScore();
         if (wonGame) { // TODO: Determinate when the player wins
             JOptionPane.showMessageDialog(this, "You won!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
         } else {
@@ -207,12 +228,11 @@ public class Game extends JPanel {
 
                 }
 
-                pool.join();
-
                 long elapsedTime = System.currentTimeMillis() - startTime;
 
                 if (elapsedTime < ENEMY_MOVE_DELAY) {
                     try {
+                        pool.join();
                         Thread.sleep(ENEMY_MOVE_DELAY - elapsedTime);
                     } catch (InterruptedException _) {
                         Thread.currentThread().interrupt();

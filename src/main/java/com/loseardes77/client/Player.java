@@ -16,6 +16,7 @@ public class Player extends JButton {
     private final Game game;
     private KeyEventDispatcher keyEventDispatcher;
     private byte health = 100;
+    private short coinsCounter = 0;
     private final long delay = 12; // In millis (12ms) tested to be decent
 
     private boolean isLightColor(Color color) {
@@ -38,6 +39,14 @@ public class Player extends JButton {
         setBackground(playerColor);
         setText("^_^");
         setFont(new Font("Arial", Font.PLAIN, 10));
+    }
+
+    public void addCoin() {
+        coinsCounter++;
+    }
+
+    public short getCoinsCount() {
+        return coinsCounter;
     }
 
     public byte getHealth() {

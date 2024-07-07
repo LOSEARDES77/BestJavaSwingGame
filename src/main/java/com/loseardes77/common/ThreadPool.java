@@ -42,7 +42,7 @@ public class ThreadPool {
     private void awaitTermination() {
         while (!queue.isEmpty()) {
             try {
-                queue.wait();
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 error("ThreadPool: Error while waiting for the queue to be empty");
                 Thread.currentThread().interrupt();
