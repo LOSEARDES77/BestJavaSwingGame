@@ -5,7 +5,9 @@ import com.loseardes77.client.SinglePlayer;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
@@ -63,8 +65,40 @@ public class MainMenu extends JFrame {
 
         mainMenuPanel.add(new JLabel(" "));
 
-        // TODO: Add the options to host or join a game and play
         multiplayerSelectorPanel = new JPanel(new BorderLayout());
+
+        JLabel titleMp = new JLabel("Best Java Swing Game");
+        multiplayerSelectorPanel.add(titleMp);
+        titleMp.setFont(new Font("Arial", Font.BOLD, 40));
+        titleMp.setBounds(170, 20, 500, 100);
+
+        JPlaceHolderTextField hostInputBox = new JPlaceHolderTextField("Enter server address (Leave blank if hosting)");
+        multiplayerSelectorPanel.add(hostInputBox);
+        hostInputBox.setBounds(210, 180, 350, 60);
+        hostInputBox.setFont(new Font("Arial", Font.PLAIN, 16));
+        hostInputBox.setHorizontalAlignment(JTextField.CENTER);
+
+        JButton joinButton = new JButton("Join server");
+        multiplayerSelectorPanel.add(joinButton);
+        joinButton.setBounds(210, 270, 170, 60);
+        joinButton.setFont(new Font("Arial", Font.BOLD, 18));
+        joinButton.addActionListener(_ -> startMultiplayer(hostInputBox.getText()));
+
+        JButton hostButton = new JButton("Host your own");
+        multiplayerSelectorPanel.add(hostButton);
+        hostButton.setBounds(390, 270, 170, 60);
+        hostButton.setFont(new Font("Arial", Font.BOLD, 18));
+        hostButton.addActionListener(_ -> startMultiplayer("0.0.0.0"));
+
+        JButton back = new JButton("Back");
+        multiplayerSelectorPanel.add(back);
+        back.setBounds(210, 360, 350, 60);
+        back.setFont(new Font("Arial", Font.BOLD, 18));
+
+        back.addActionListener(_ -> showMainMenu());
+
+        multiplayerSelectorPanel.add(new JLabel(" "));
+
 
     }
 
@@ -81,7 +115,7 @@ public class MainMenu extends JFrame {
         setVisible(false);
         if (!getComponent(0).equals(multiplayerSelectorPanel)) {
             remove(mainMenuPanel);
-            add(mainMenuPanel);
+            add(multiplayerSelectorPanel);
         }
         setVisible(true);
     }
@@ -96,9 +130,11 @@ public class MainMenu extends JFrame {
         sp.startGame();
     }
 
-    public void startMultiplayer() {
+    public void startMultiplayer(String host) {
         hideMenus();
-        // MultiPlayer mp = new MultiPlayer(this)
+        JOptionPane.showMessageDialog(null, "Sorry, not yet implemented", "Error", JOptionPane.ERROR_MESSAGE);
+        // MultiPlayer mp = new MultiPlayer(this, host)
         // mp.startGame();
+        showMultiplayerSelector();
     }
 }
