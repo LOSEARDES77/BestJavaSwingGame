@@ -76,7 +76,9 @@ public class SinglePlayer extends JFrame {
     }
 
     public void destroy() {
+        Game.exitThreads = true;
         setVisible(false);
+        gamePanel.getPool().shutdown();
         for (Component c : gamePanel.getComponents()) {
             gamePanel.remove(c);
         }

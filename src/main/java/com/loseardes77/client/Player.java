@@ -14,7 +14,6 @@ public class Player extends JButton {
     private final int speed = 5;
     private final boolean[] inputMap = new boolean[4]; // w, a, s, d
     private final Game game;
-    private Thread inputThread;
     private KeyEventDispatcher keyEventDispatcher;
     private byte health = 100;
     private final long delay = 12; // In millis (12ms) tested to be decent
@@ -118,7 +117,7 @@ public class Player extends JButton {
     }
 
     public void startMovingPLayer() {
-        inputThread = new Thread(() -> {
+        new Thread(() -> {
             while (!Game.exitThreads) {
 
                 long startTime = System.currentTimeMillis();
@@ -145,9 +144,7 @@ public class Player extends JButton {
                 }
             }
             stopInputDetection();
-        });
-
-        inputThread.start();
+        }).start();
     }
 
 }

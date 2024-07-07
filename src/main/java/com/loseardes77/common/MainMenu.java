@@ -15,11 +15,11 @@ import static com.loseardes77.common.Logger.info;
 
 public class MainMenu extends JFrame {
 
-    private final int[] windowDimensions = {800, 500};
     private final JPanel mainMenuPanel;
     private final JPanel multiplayerSelectorPanel;
 
     public MainMenu() {
+        int[] windowDimensions = {800, 500};
         setTitle("Main Menu");
         setSize(windowDimensions[0], windowDimensions[1]);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

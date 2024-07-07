@@ -7,18 +7,24 @@ import javax.swing.JButton;
 import java.awt.Color;
 import java.awt.Rectangle;
 
-import static com.loseardes77.common.Logger.warning;
-
 public class Enemy extends JButton {
     private Game game = null;
-    private final long moveDelay = 16; // In mills (16ms)
-    private final int speed = 2;
-    private Thread moveThread;
+
+    //  Movement
+    private boolean axis;
+    private boolean direction;
+
+    private int counter = 0;
+    private int change = 0;
 
     public Enemy(Game gameInstance, Rectangle bounds) {
+
         if (game == null) {
             game = gameInstance;
         }
+
+        this.axis = game.getRandom().nextBoolean();
+        this.direction = game.getRandom().nextBoolean();
         setText("•_•");
         setBounds(bounds);
         setBackground(new Color(255, 50, 50));
@@ -39,81 +45,47 @@ public class Enemy extends JButton {
         return r;
     }
 
-    public void startMove() {
-        moveThread = new Thread(() -> {
-            boolean axis = game.getRandom().nextBoolean();
-            boolean direction = game.getRandom().nextBoolean();
+    protected void move() {
+        if (counter++ > change) {
+            axis = game.getRandom().nextBoolean();
+            direction = game.getRandom().nextBoolean();
+            counter = 0;
+            change = game.getRandom().nextInt(500) + 100;
+        }
 
-            int counter = 0;
-            int change = 0;
-            boolean result;
-            while (!Game.exitThreads) {
-                long startTime = System.currentTimeMillis();
+        boolean result;
 
-                if (counter++ > change) {
-                    axis = game.getRandom().nextBoolean();
-                    direction = game.getRandom().nextBoolean();
-                    counter = 0;
-                    change = game.getRandom().nextInt(500) + 100;
-                }
-                if (axis) {
-                    if (direction) {
-                        if (getX() + getWidth() + 15 > game.getWidth())
-                            direction = false;
-                        result = moveEnemy(Direction.RIGHT);
-                    } else {
-                        if (getX() - 15 < 0)
-                            direction = true;
-                        result = moveEnemy(Direction.LEFT);
-                    }
-                } else {
-                    if (direction) {
-                        if (getY() + getHeight() + 15 > game.getHeight())
-                            direction = false;
-                        result = moveEnemy(Direction.DOWN);
-                    } else {
-                        if (getY() - 15 < 0)
-                            direction = true;
-                        result = moveEnemy(Direction.UP);
-                    }
-                }
-                if (result) {
-                    direction = !direction;
-                    axis = !axis;
-                }
-
-                if (game.getPlayer().getBounds().intersects(getBounds())) {
-                    byte health = (byte) (game.getPlayer().getHealth() - 10);
-                    game.getPlayer().setHealth(health);
-                    game.updateHealthLabel(health);
-                    setLocation(genRandomPosition().getLocation());
-                    direction = game.getRandom().nextBoolean();
-                    axis = game.getRandom().nextBoolean();
-                    if (health <= 0) {
-                        game.end(false);
-                        break;
-                    }
-                }
-
-                long elapsedTime = System.currentTimeMillis() - startTime;
-
-                if (elapsedTime < moveDelay) {
-                    try {
-                        Thread.sleep(moveDelay - elapsedTime);
-                    } catch (InterruptedException _) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-
-                if (elapsedTime > moveDelay) {
-                    warning("Enemy movement took too long (" + (elapsedTime - moveDelay) + "ms more)");
-                }
+        if (axis) {
+            if (direction) {
+                if (getX() + getWidth() + 15 > game.getWidth())
+                    direction = false;
+                result = moveEnemy(Direction.RIGHT);
+            } else {
+                if (getX() - 15 < 0)
+                    direction = true;
+                result = moveEnemy(Direction.LEFT);
             }
-        });
-        moveThread.start();
+        } else {
+            if (direction) {
+                if (getY() + getHeight() + 15 > game.getHeight())
+                    direction = false;
+                result = moveEnemy(Direction.DOWN);
+            } else {
+                if (getY() - 15 < 0)
+                    direction = true;
+                result = moveEnemy(Direction.UP);
+            }
+        }
+        if (result) {
+            direction = !direction;
+            axis = !axis;
+        }
     }
 
     private boolean moveEnemy(Direction d) {
+
+        int speed = 2;
+
         int original_x = getX();
         int original_y = getY();
         int x = original_x;
@@ -154,4 +126,9 @@ public class Enemy extends JButton {
         return false;
     }
 
+    public void swapLocation() {
+        setLocation(genRandomPosition().getLocation());
+        direction = game.getRandom().nextBoolean();
+        axis = game.getRandom().nextBoolean();
+    }
 }

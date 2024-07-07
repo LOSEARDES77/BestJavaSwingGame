@@ -1,5 +1,6 @@
 package com.loseardes77.client;
 
+import com.loseardes77.common.ThreadPool;
 import com.loseardes77.common.Wall;
 
 import javax.swing.JLabel;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Random;
 
 import static com.loseardes77.common.Logger.info;
+import static com.loseardes77.common.Logger.warning;
 
 public class Game extends JPanel {
 
@@ -26,6 +28,7 @@ public class Game extends JPanel {
     private Player player;
     private final SinglePlayer frame;
     private final JLabel healthLabel;
+    private final ThreadPool pool;
 
 
     public Game(SinglePlayer frame, JLabel healthLabel) {
@@ -39,6 +42,9 @@ public class Game extends JPanel {
         random = new Random(seed);
         buildWalls();
         addEnemies(10);
+
+        // Tested with 4 threads and worked fine
+        pool = new ThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     public void addPlayer(Player player) {
@@ -65,6 +71,10 @@ public class Game extends JPanel {
 
     public Random getRandom() {
         return random;
+    }
+
+    public ThreadPool getPool() {
+        return pool;
     }
 
     public boolean checkCollision(Rectangle r, Component self, Player player) {
@@ -112,8 +122,7 @@ public class Game extends JPanel {
 
     public void startGame() {
         setVisible(true);
-        for (Enemy e : enemies)
-            e.startMove();
+        setupEnemyMovementThread();
 
     }
 
@@ -173,5 +182,47 @@ public class Game extends JPanel {
         info("Game Over");
 
         this.frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+    }
+
+    public void setupEnemyMovementThread() {
+        new Thread(() -> {
+            final long ENEMY_MOVE_DELAY = 16; // In mills (16ms)
+            while (!Game.exitThreads) {
+                long startTime = System.currentTimeMillis();
+
+                for (Enemy e : enemies) {
+                    pool.execute(() -> {
+                        e.move();
+                        Rectangle playerHitBox = getPlayer().getBounds();
+                        if (playerHitBox.intersects(e.getBounds())) {
+                            byte health = (byte) (getPlayer().getHealth() - 10);
+                            getPlayer().setHealth(health);
+                            updateHealthLabel(health);
+                            e.swapLocation();
+                            if (health <= 0) {
+                                end(false);
+                            }
+                        }
+                    });
+
+                }
+
+                pool.join();
+
+                long elapsedTime = System.currentTimeMillis() - startTime;
+
+                if (elapsedTime < ENEMY_MOVE_DELAY) {
+                    try {
+                        Thread.sleep(ENEMY_MOVE_DELAY - elapsedTime);
+                    } catch (InterruptedException _) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
+                if (elapsedTime > ENEMY_MOVE_DELAY + 10) {
+                    warning("Enemy movement took too long (" + (elapsedTime - ENEMY_MOVE_DELAY) + "ms more)");
+                }
+            }
+        }).start();
     }
 }
