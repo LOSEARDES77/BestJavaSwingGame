@@ -8,6 +8,7 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 
+import static com.loseardes77.common.Logger.info;
 import static com.loseardes77.common.Logger.warning;
 
 public class Player extends JButton {
@@ -126,7 +127,7 @@ public class Player extends JButton {
     }
 
     public void startMovingPLayer() {
-        new Thread(() -> {
+        Thread movement = new Thread(() -> {
             while (!Game.exitThreads) {
 
                 long startTime = System.currentTimeMillis();
@@ -148,12 +149,15 @@ public class Player extends JButton {
                     } catch (InterruptedException _) {
                         Thread.currentThread().interrupt();
                     }
-                } else if (elapsedTime > delay) {
+                } else if (elapsedTime > delay + 5) {
                     warning("Input took too long (" + (elapsedTime - delay) + "ms more)");
                 }
             }
+            info("Stopping player motion Thread");
             stopInputDetection();
-        }).start();
+        });
+        movement.setPriority(Thread.MAX_PRIORITY);
+        movement.start();
     }
 
 }

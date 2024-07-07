@@ -66,6 +66,7 @@ public class ThreadPool {
             this.id = id;
             this.queue = queue;
             this.thread = new Thread(this);
+            this.thread.setPriority(4);
             this.thread.start();
         }
 

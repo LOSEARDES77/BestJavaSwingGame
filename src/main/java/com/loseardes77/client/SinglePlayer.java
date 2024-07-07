@@ -4,14 +4,8 @@ import com.loseardes77.common.MainMenu;
 
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -38,8 +32,7 @@ public class SinglePlayer extends JFrame {
             error("No color selected for player. Exiting...");
             return;
         }
-        JLabel healthLabel = new JLabel("100 HP");
-        this.gamePanel = new Game(this, healthLabel);
+        this.gamePanel = new Game(this);
         this.player = new Player(true, gamePanel, playerColor);
         gamePanel.addPlayer(player);
 
@@ -52,23 +45,15 @@ public class SinglePlayer extends JFrame {
             }
         });
 
-        healthLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        FontMetrics metrics = healthLabel.getFontMetrics(healthLabel.getFont());
-        Dimension healthLabelSize = new Dimension(metrics.stringWidth(healthLabel.getText()), metrics.getHeight());
-        Point healthLabelLocation = new Point((int) ((getWidth() / 2.0) - (healthLabelSize.getWidth() / 2.0)), getHeight() - metrics.getHeight() - 100);
-        gamePanel.addObjectWithoutCollision(healthLabel, new Rectangle(healthLabelLocation, healthLabelSize));
-
 
         add(gamePanel);
     }
 
     public void startGame() {
-        Game.exitThreads = false;
         info("Starting game");
         setVisible(true);
         if (gamePanel != null && player != null) {
             gamePanel.startGame();
-            player.startMovingPLayer();
         } else {
             error("Game not started");
             destroy();
@@ -86,7 +71,6 @@ public class SinglePlayer extends JFrame {
             remove(component);
         }
         System.gc();
-        dispose();
         menu.showMainMenu();
         System.gc();
     }

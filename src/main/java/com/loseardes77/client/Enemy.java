@@ -11,8 +11,7 @@ public class Enemy extends JButton {
     private Game game = null;
 
     //  Movement
-    private boolean axis;
-    private boolean direction;
+    private final boolean[] axis;
 
     private int counter = 0;
     private int change = 0;
@@ -23,8 +22,8 @@ public class Enemy extends JButton {
             game = gameInstance;
         }
 
-        this.axis = game.getRandom().nextBoolean();
-        this.direction = game.getRandom().nextBoolean();
+        this.axis = new boolean[]{game.getRandom().nextBoolean(), game.getRandom().nextBoolean()};
+
         setText("•_•");
         setBounds(bounds);
         setBackground(new Color(255, 50, 50));
@@ -46,45 +45,45 @@ public class Enemy extends JButton {
     }
 
     protected void move() {
-        if (counter++ > change) {
-            axis = game.getRandom().nextBoolean();
-            direction = game.getRandom().nextBoolean();
+        if (++counter > change) {
+            axis[0] = game.getRandom().nextBoolean();
+            axis[1] = game.getRandom().nextBoolean();
             counter = 0;
             change = game.getRandom().nextInt(500) + 100;
         }
 
         boolean result;
 
-        if (axis) {
-            if (direction) {
+        if (axis[0]) {
+            if (axis[1]) {
                 if (getX() + getWidth() + 15 > game.getWidth())
-                    direction = false;
+                    axis[1] = false;
                 result = moveEnemy(Direction.RIGHT);
             } else {
                 if (getX() - 15 < 0)
-                    direction = true;
+                    axis[1] = true;
                 result = moveEnemy(Direction.LEFT);
             }
         } else {
-            if (direction) {
+            if (axis[1]) {
                 if (getY() + getHeight() + 15 > game.getHeight())
-                    direction = false;
+                    axis[1] = false;
                 result = moveEnemy(Direction.DOWN);
             } else {
                 if (getY() - 15 < 0)
-                    direction = true;
+                    axis[1] = true;
                 result = moveEnemy(Direction.UP);
             }
         }
         if (result) {
-            direction = !direction;
-            axis = !axis;
+            axis[1] = !axis[1];
+            axis[0] = !axis[0];
         }
     }
 
     private boolean moveEnemy(Direction d) {
 
-        int speed = 2;
+        int speed = 3;
 
         int original_x = getX();
         int original_y = getY();
@@ -113,22 +112,13 @@ public class Enemy extends JButton {
 
         setLocation(x, y);
 
-        if (game.checkCollision(r, this, game.getPlayer())) {
-            setLocation(original_x, original_y);
-            return true;
-        }
-
-        if (game.checkCollisionWithEnemies(r, this)) {
-            setLocation(original_x, original_y);
-            return true;
-        }
 
         return false;
     }
 
     public void swapLocation() {
         setLocation(genRandomPosition().getLocation());
-        direction = game.getRandom().nextBoolean();
-        axis = game.getRandom().nextBoolean();
+        axis[1] = game.getRandom().nextBoolean();
+        axis[0] = game.getRandom().nextBoolean();
     }
 }

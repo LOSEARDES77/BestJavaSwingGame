@@ -38,9 +38,9 @@ public class HighScoreTable {
     }
 
     public static String getHighScoreString() {
-        String inputLine = null;
+        String inputLine;
         BufferedReader in = null;
-        StringBuffer content = null;
+        StringBuffer content;
         HttpURLConnection connection = null;
 
         try {
@@ -74,7 +74,7 @@ public class HighScoreTable {
         ObjectMapper objectMapper = new ObjectMapper();
         String highScoreString = getHighScoreString();
         if (highScoreString != null)
-            return objectMapper.readValue(highScoreString, new TypeReference<List<Score>>() {
+            return objectMapper.readValue(highScoreString, new TypeReference<>() {
             });
         else
             return null;
