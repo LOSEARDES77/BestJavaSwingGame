@@ -12,25 +12,26 @@ public class Logger {
             "\u001B[35m", // 5 - Purple
             "\u001B[36m", // 6 - Cyan
             "\u001B[37m", // 7 - White
-            "\u001B[0m",  // 8 - Reset
+            "\u001B[1m",  // 8 - Bold
+            "\u001B[0m",  // 9 - Reset
     };
 
-    public static void setDebug(boolean debug){
+    public static void setDebug(boolean debug) {
         Logger.debug = debug;
     }
 
-    public static <T> void info(T msg){
+    public static <T> void info(T msg) {
         if (debug)
-            System.out.println( "[" + colors[4] +"INFO" + colors[8] + "] - " + msg );
+            System.out.println("[" + colors[8] + colors[4] + "INFO" + colors[9] + "] - " + msg);
     }
 
-    public static <T> void warning(T msg){
+    public static <T> void warning(T msg) {
         if (debug)
-            System.out.println("[" + colors[3] + "WARNING" + colors[8] + "] - " + msg);
+            System.out.println("[" + colors[8] + colors[3] + "WARNING" + colors[9] + "] - " + msg);
     }
 
-    public static <T> void error(T msg){
-        System.out.println("[" + colors[1] + "ERROR" + colors[8] + "] - " + msg);
+    public static <T> void error(T msg) {
+        System.out.println("[" + colors[8] + colors[1] + "ERROR" + colors[9] + "] - " + msg);
     }
 
 }

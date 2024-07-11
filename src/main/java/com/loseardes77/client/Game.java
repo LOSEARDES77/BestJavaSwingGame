@@ -331,6 +331,7 @@ public class Game extends JPanel {
     }
 
     public void setupEnemyMovementThread() {
+        //  TODO: Optimize this
         new Thread(() -> {
             final long ENEMY_MOVE_DELAY = 30; // In mills 25ms)
             while (!Game.exitThreads) {
