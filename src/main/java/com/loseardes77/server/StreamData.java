@@ -18,7 +18,8 @@ public class StreamData {
         ENEMY_CHANGE,   // A change on an enemy (direction or axis)
         ENEMY_TP,       // An enemy teleported
         EXIT,           // Finish
-        UNKNOW_TYPE,    // Error
+        UNKNOW_TYPE,    // Unknown type
+        INVALID,        // Bad packet
     }
 
 
