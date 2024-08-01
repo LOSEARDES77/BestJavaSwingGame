@@ -1,5 +1,7 @@
 package com.loseardes77.server;
 
+import com.loseardes77.common.StreamData;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -81,7 +83,7 @@ public class Client implements Runnable {
                     case ENEMY_TP -> {
                     }
 
-                    case UNKNOW_TYPE -> {
+                    case UNKNOWN_TYPE -> {
                     }
 
                     case EXIT -> onExit();

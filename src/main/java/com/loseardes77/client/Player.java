@@ -20,11 +20,23 @@ public class Player extends JButton {
     private short coinsCounter = 0;
     private final long delay = 12; // In millis (12ms) tested to be decent
 
+    // Multiplayer
+    private boolean isReady = false;
+
     private boolean isLightColor(Color color) {
         float[] hsb = new float[3];
         Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsb);
         return hsb[2] > 0.5;
     }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        isReady = ready;
+    }
+
 
     public Player(boolean inputs, Game game, Color playerColor) {
         if (inputs)

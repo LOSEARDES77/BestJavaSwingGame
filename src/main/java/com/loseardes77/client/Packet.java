@@ -1,23 +1,25 @@
 package com.loseardes77.client;
 
-import com.loseardes77.server.StreamData;
+import com.loseardes77.common.StreamData;
 
 import static com.loseardes77.common.Logger.error;
 
 public class Packet {
     private final String data;
     private final boolean valid;
+    private final StreamData.Type type;
 
     public Packet(StreamData.Type type, String data) {
-        this.data = buildData(type, data);
+        this.data = data;
+        this.type = type;
 
-        if (this.data.getBytes().length > 512) {
+        if (buildData(type, data).length() > 512) {
             error("Data is too long");
             this.valid = false;
             return;
         }
 
-        if (StreamData.getTypeFromData(this.data) != type) {
+        if (StreamData.getTypeFromData(buildData(type, data)) != this.type) {
             error("Failed to create packet");
             this.valid = false;
             return;
@@ -25,6 +27,7 @@ public class Packet {
 
         this.valid = true;
     }
+
 
     private static String buildData(StreamData.Type type, String data) {
         StringBuilder dataBuilder = new StringBuilder(type.toString());
@@ -38,12 +41,22 @@ public class Packet {
         return dataBuilder.toString();
     }
 
+    public String getRawData() {
+        if (valid)
+            return buildData(type, data);
+
+        return buildData(StreamData.Type.INVALID, null);
+    }
+
     public String getData() {
         if (valid)
             return data;
 
         return buildData(StreamData.Type.INVALID, null);
+    }
 
+    public StreamData.Type getType() {
+        return type;
     }
 
     public boolean isValid() {

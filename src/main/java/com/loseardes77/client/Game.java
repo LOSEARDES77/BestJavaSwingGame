@@ -2,14 +2,12 @@ package com.loseardes77.client;
 
 import com.loseardes77.common.ThreadPool;
 import com.loseardes77.common.Wall;
-import com.loseardes77.db.HighScoreTable;
 import com.loseardes77.db.Score;
 
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -20,6 +18,7 @@ import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Random;
+import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,15 +35,19 @@ public class Game extends JPanel {
     private final List<Enemy> enemies = new CopyOnWriteArrayList<>();
     private final List<Coin> coins = new CopyOnWriteArrayList<>();
     private final Random random;
-    private Player player;
-    private final SinglePlayer frame;
+    private Player selfPlayer;
+    private final Vector<Player> players = new Vector<>();
+    private final JFrame frame;
     private final JLabel healthLabel;
     private final ThreadPool pool;
     private final JLabel scoreLabel;
     private static final int COIN_GENERATION_SPEED = 500;
 
+    // Multiplayer
+    private final boolean clientEnemies;
+    private final boolean clientCoins;
 
-    public Game(SinglePlayer frame) {
+    public Game(JFrame frame, boolean genCoins, boolean genEnemies, boolean genWalls) {
         this.frame = frame;
         setLayout(new BorderLayout());
         setBounds(0, 0, windowDimensions[0], windowDimensions[1]);
@@ -66,6 +69,7 @@ public class Game extends JPanel {
         scoreLabel.setBounds(new Rectangle(scoreLabelLocation, scoreLabelSize));
 
 
+        /* Doesn't work rn
         DefaultTableModel model = HighScoreTable.getHighScoreTableModel();
         if (model != null) {
             JTable highScore = new JTable(model);
@@ -76,18 +80,33 @@ public class Game extends JPanel {
         } else {
             error("Couldn't connect to the database");
         }
+        */
 
 
         add(dummy, BorderLayout.CENTER);
-        int seed = (int) (Math.random() * 999999) + 1;
-        info("Using seed \"" + seed + "\"");
-        random = new Random(seed);
-        buildWalls();
-        addEnemies(15);
-        addCoins();
+        if (genEnemies || genWalls || genCoins) {
+            int seed = (int) (Math.random() * 999999) + 1;
+            info("Using seed \"" + seed + "\"");
+            random = new Random(seed);
+        } else {
+            random = null; // Runs on the server
+        }
+        if (genWalls)
+            buildWalls();
+        if (genEnemies)
+            addEnemies(15);
+        if (genCoins)
+            addCoins();
+
+        clientEnemies = genEnemies;
+        clientCoins = genCoins;
 
         // Tested with 4 threads and worked fine
         pool = new ThreadPool(Runtime.getRuntime().availableProcessors());
+    }
+
+    public Game(JFrame frame) {
+        this(frame, true, true, true);
     }
 
     private void addCoins() {
@@ -107,8 +126,15 @@ public class Game extends JPanel {
         }
     }
 
+    public void addPlayer(Player player, boolean isSelf) {
+        if (isSelf) {
+            this.selfPlayer = player;
+        }
+        this.players.add(player);
+    }
+
     public void addPlayer(Player player) {
-        this.player = player;
+        this.selfPlayer = player;
         addObject(player, genRandomPosition(50));
     }
 
@@ -126,7 +152,7 @@ public class Game extends JPanel {
 
 
     public Player getPlayer() {
-        return player;
+        return selfPlayer;
     }
 
     public Random getRandom() {
@@ -183,9 +209,11 @@ public class Game extends JPanel {
     public void startGame() {
         Game.exitThreads = false;
         setVisible(true);
-        player.startMovingPLayer();
-        setupEnemyMovementThread();
-        startCoinGeneration();
+        selfPlayer.startMovingPLayer();
+        if (clientEnemies)
+            setupEnemyMovementThread();
+        if (clientCoins)
+            startCoinGeneration();
 
     }
 
@@ -317,9 +345,11 @@ public class Game extends JPanel {
     public void end(boolean wonGame) {
         Game.exitThreads = true;
         Score s = new Score();
-        s.setName(player.getName());
-        s.setScore(player.getCoinsCount());
+        /* API Down
+        s.setName(selfPlayer.getName());
+        s.setScore(selfPlayer.getCoinsCount());
         s.sendScore();
+        */
         pool.join();
         if (wonGame) { // TODO: Determinate when the player wins
             JOptionPane.showMessageDialog(this, "You won!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
@@ -333,7 +363,7 @@ public class Game extends JPanel {
     public void setupEnemyMovementThread() {
         //  TODO: Optimize this
         new Thread(() -> {
-            final long ENEMY_MOVE_DELAY = 30; // In mills 25ms)
+            final long ENEMY_MOVE_DELAY = 30; // In mills
             while (!Game.exitThreads) {
                 long startTime = System.currentTimeMillis();
                 AtomicBoolean endGame = new AtomicBoolean(false);

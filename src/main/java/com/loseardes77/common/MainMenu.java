@@ -1,5 +1,6 @@
 package com.loseardes77.common;
 
+import com.loseardes77.client.MultiPlayer;
 import com.loseardes77.client.SinglePlayer;
 
 import javax.swing.JButton;
@@ -12,7 +13,10 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
+import static com.loseardes77.common.Logger.error;
 import static com.loseardes77.common.Logger.info;
 
 public class MainMenu extends JFrame {
@@ -72,7 +76,7 @@ public class MainMenu extends JFrame {
         titleMp.setFont(new Font("Arial", Font.BOLD, 40));
         titleMp.setBounds(170, 20, 500, 100);
 
-        JPlaceHolderTextField hostInputBox = new JPlaceHolderTextField("Enter server address (Leave blank if hosting)");
+        JPlaceHolderTextField hostInputBox = new JPlaceHolderTextField("Enter server address");
         multiplayerSelectorPanel.add(hostInputBox);
         hostInputBox.setBounds(210, 180, 350, 60);
         hostInputBox.setFont(new Font("Arial", Font.PLAIN, 16));
@@ -80,15 +84,17 @@ public class MainMenu extends JFrame {
 
         JButton joinButton = new JButton("Join server");
         multiplayerSelectorPanel.add(joinButton);
-        joinButton.setBounds(210, 270, 170, 60);
+        joinButton.setBounds(210, 270, 350, 60);
         joinButton.setFont(new Font("Arial", Font.BOLD, 18));
         joinButton.addActionListener(_ -> startMultiplayer(hostInputBox.getText()));
 
+        /* TODO
         JButton hostButton = new JButton("Host your own");
         multiplayerSelectorPanel.add(hostButton);
         hostButton.setBounds(390, 270, 170, 60);
         hostButton.setFont(new Font("Arial", Font.BOLD, 18));
         hostButton.addActionListener(_ -> startMultiplayer("0.0.0.0"));
+        */
 
         JButton back = new JButton("Back");
         multiplayerSelectorPanel.add(back);
@@ -131,10 +137,26 @@ public class MainMenu extends JFrame {
     }
 
     public void startMultiplayer(String host) {
-        hideMenus();
-        JOptionPane.showMessageDialog(null, "Sorry, not yet implemented", "Error", JOptionPane.ERROR_MESSAGE);
-        // MultiPlayer mp = new MultiPlayer(this, host)
-        // mp.startGame();
-        showMultiplayerSelector();
+        if (host.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Please enter a server address", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        InetAddress address;
+
+        try {
+            address = InetAddress.getByName(host);
+        } catch (UnknownHostException e) {
+            JOptionPane.showMessageDialog(this, "Unknown host", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        MultiPlayer mp = MultiPlayer.build(this, address);
+        if (mp == null) {
+            error("Multiplayer failed to build");
+            return;
+        }
+        mp.showGameScreen();
+
     }
 }
