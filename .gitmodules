@@ -1,0 +1,3 @@
+[submodule "swing-game-server"]
+	path = swing-game-server
+	url = https://github.com/LOSEARDES77/swing-game-server.git
