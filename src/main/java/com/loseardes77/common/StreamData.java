@@ -7,9 +7,7 @@ public class StreamData {
 
     public enum Type {
         JOIN,           // To join the game
-        SET_COLOR,      // Change the color of the player
         COLOR_ERROR,    // If there is already a player with that color
-        READY_UP,       // When the client is ready to start the match
         LEVEL_DATA,     // The details of the level (walls, enemy quantity, ...)
         READY,          // Marks the player as ready
         START_GAME,     // Start the game
@@ -24,6 +22,7 @@ public class StreamData {
         OK,             // Everything is fine
         ERROR,          // Something went wrong
         PING,           // Check the ping
+        PLAYER_JOINED,    // A player joined
     }
 
 

@@ -52,15 +52,9 @@ public class Client implements Runnable {
                     case JOIN -> {
                     }
 
-                    case SET_COLOR -> {
-                    }
-
                     case COLOR_ERROR -> {
                     }
 
-                    case READY_UP -> {
-
-                    }
 
                     case LEVEL_DATA -> {
                     }

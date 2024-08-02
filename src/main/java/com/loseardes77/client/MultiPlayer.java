@@ -6,6 +6,7 @@ import com.loseardes77.common.StreamData;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import java.awt.Color;
 import java.awt.Component;
@@ -18,6 +19,7 @@ import java.net.SocketException;
 
 import static com.loseardes77.common.Logger.error;
 import static com.loseardes77.common.Logger.info;
+import static com.loseardes77.common.Logger.warning;
 
 public class MultiPlayer extends JFrame {
     private final MainMenu menuFrame;
@@ -39,7 +41,7 @@ public class MultiPlayer extends JFrame {
         this.packetManager = new PacketManager(host);
 
         packetManager.ping();
-        
+
         Color playerColor = JColorChooser.showDialog(null, "Select a player color", new Color((int) (255 * Math.random()), (int) (255 * Math.random()), (int) (255 * Math.random())));
         if (playerColor == null) {
             error("No color selected for player. Exiting...");
@@ -89,6 +91,7 @@ public class MultiPlayer extends JFrame {
     // TODO: Handle more than one player
 
     public void showGameScreen() {
+        Game.exitThreads = false;
         menuFrame.hideMenus();
         setVisible(true);
 
@@ -106,6 +109,69 @@ public class MultiPlayer extends JFrame {
                 readyButton.setBackground(new Color(100, 0, 0));
             }
         });
+        JLabel pingLabel = new JLabel("Ping: --ms");
+        pingLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        gamePanel.addObjectWithoutCollision(pingLabel, new Rectangle(20, 20, 200, 50));
+        new Thread(() -> {
+            while (!Game.exitThreads) {
+                info("RUNNING PING");
+                int[] pings = packetManager.ping();
+                if (pings != null) {
+                    int averagePing = (int) (((double) pings[0] + pings[1]) / 2.0);
+                    pingLabel.setText(String.format("Ping: %02dims", averagePing));
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    error("Failed to sleep thread (" + e.getMessage() + ")");
+                }
+            }
+        }).start();
+
+        // startListener();
+
+    }
+
+    public void startListener() {
+        new Thread(() -> {
+            while (!Game.exitThreads) {
+                Packet p = packetManager.receivePacket();
+                switch (p.getType()) {
+                    case MOVE -> {
+                        String[] data = p.getData().split(";");
+                        String[] movedPlayerParts = data[0].split(",");
+                        Color movedPlayerColor = new Color(Integer.parseInt(movedPlayerParts[0]), Integer.parseInt(movedPlayerParts[1]), Integer.parseInt(movedPlayerParts[2]));
+
+                        if (gamePanel.hasPlayer(movedPlayerColor)) {
+                            Player movedPlayer = gamePanel.getPlayer(movedPlayerColor);
+                            movedPlayer.teleport(Integer.parseInt(data[1]), Integer.parseInt(data[2]));
+                        } else {
+                            warning("Player not found (" + movedPlayerColor + ")");
+                        }
+
+                    }
+                    case START_GAME -> {
+                        startGame();
+                    }
+                    case MATCH_ENDED -> {
+                        JOptionPane.showMessageDialog(this, "Game ended", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+                        dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+                        destroy();
+
+                    }
+                    case PLAYER_JOINED -> {
+                        String[] data = p.getData().split(";");
+                        Color newPlayerColor = new Color(Integer.parseInt(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]));
+                        if (!gamePanel.hasMatchStarted()) {
+                            Player newPlayer = new Player(false, gamePanel, newPlayerColor);
+                        }
+
+                    }
+                    default -> {
+                    }
+                }
+            }
+        }).start();
 
     }
 

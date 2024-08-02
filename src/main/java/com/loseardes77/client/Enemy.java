@@ -104,7 +104,7 @@ public class Enemy extends JButton {
                 break;
         }
         Rectangle r = new Rectangle(x, y, getWidth(), getHeight());
-        if (game.checkCollision(r, this, game.getPlayer()))
+        if (game.checkCollision(r, this, game.getSelfPlayer()))
             return true;
 
         if (game.checkCollisionWithEnemies(r, this))

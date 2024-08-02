@@ -9,6 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -16,9 +17,9 @@ import java.awt.FontMetrics;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,7 +37,6 @@ public class Game extends JPanel {
     private final List<Coin> coins = new CopyOnWriteArrayList<>();
     private final Random random;
     private Player selfPlayer;
-    private final Vector<Player> players = new Vector<>();
     private final JFrame frame;
     private final JLabel healthLabel;
     private final ThreadPool pool;
@@ -44,8 +44,10 @@ public class Game extends JPanel {
     private static final int COIN_GENERATION_SPEED = 500;
 
     // Multiplayer
+    private final HashMap<Color, Player> players = new HashMap<>();
     private final boolean clientEnemies;
     private final boolean clientCoins;
+    private boolean hasMatchStarted = false;
 
     public Game(JFrame frame, boolean genCoins, boolean genEnemies, boolean genWalls) {
         this.frame = frame;
@@ -130,7 +132,7 @@ public class Game extends JPanel {
         if (isSelf) {
             this.selfPlayer = player;
         }
-        this.players.add(player);
+        this.players.put(player.getColor(), player);
     }
 
     public void addPlayer(Player player) {
@@ -151,8 +153,16 @@ public class Game extends JPanel {
     }
 
 
-    public Player getPlayer() {
+    public Player getSelfPlayer() {
         return selfPlayer;
+    }
+
+    public Player getPlayer(Color c) {
+        return players.get(c);
+    }
+
+    public boolean hasPlayer(Color c) {
+        return players.containsKey(c);
     }
 
     public Random getRandom() {
@@ -207,6 +217,7 @@ public class Game extends JPanel {
     }
 
     public void startGame() {
+        this.hasMatchStarted = true;
         Game.exitThreads = false;
         setVisible(true);
         selfPlayer.startMovingPLayer();
@@ -215,6 +226,10 @@ public class Game extends JPanel {
         if (clientCoins)
             startCoinGeneration();
 
+    }
+
+    public boolean hasMatchStarted() {
+        return hasMatchStarted;
     }
 
     private void startCoinGeneration() {
@@ -261,7 +276,7 @@ public class Game extends JPanel {
     private Thread coinGenThread() {
         Thread coinCol = new Thread(() -> {
             while (!Game.exitThreads) {
-                Rectangle playerHitBox = getPlayer().getBounds();
+                Rectangle playerHitBox = getSelfPlayer().getBounds();
                 for (Coin c : coins) {
                     if (c.getBounds().intersects(playerHitBox)) {
                         updateCoins();
@@ -285,8 +300,8 @@ public class Game extends JPanel {
     }
 
     private void updateCoins() {
-        getPlayer().addCoin();
-        scoreLabel.setText(getPlayer().getCoinsCount() + " Coins");
+        getSelfPlayer().addCoin();
+        scoreLabel.setText(getSelfPlayer().getCoinsCount() + " Coins");
         scoreLabel.repaint();
 
         FontMetrics scoreLabelMetrics = scoreLabel.getFontMetrics(scoreLabel.getFont());
@@ -354,7 +369,7 @@ public class Game extends JPanel {
         if (wonGame) { // TODO: Determinate when the player wins
             JOptionPane.showMessageDialog(this, "You won!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "\tYou lost!\nYou collected " + getPlayer().getCoinsCount() + " coins", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "\tYou lost!\nYou collected " + getSelfPlayer().getCoinsCount() + " coins", "Game Over", JOptionPane.INFORMATION_MESSAGE);
         }
         info("Game Over");
         this.frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
@@ -370,10 +385,10 @@ public class Game extends JPanel {
                 for (Enemy e : enemies) {
                     pool.execute(() -> {
                         e.move();
-                        Rectangle playerHitBox = getPlayer().getBounds();
+                        Rectangle playerHitBox = getSelfPlayer().getBounds();
                         if (playerHitBox.intersects(e.getBounds())) {
-                            byte health = (byte) (getPlayer().getHealth() - 10);
-                            getPlayer().setHealth(health);
+                            byte health = (byte) (getSelfPlayer().getHealth() - 10);
+                            getSelfPlayer().setHealth(health);
                             updateHealthLabel(health);
                             e.swapLocation();
                             if (health <= 0) {

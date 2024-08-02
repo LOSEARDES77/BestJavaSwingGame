@@ -21,6 +21,7 @@ public class Player extends JButton {
     private final long delay = 12; // In millis (12ms) tested to be decent
 
     // Multiplayer
+    private final Color color;
     private boolean isReady = false;
 
     private boolean isLightColor(Color color) {
@@ -52,6 +53,11 @@ public class Player extends JButton {
         setBackground(playerColor);
         setText("^_^");
         setFont(new Font("Arial", Font.PLAIN, 10));
+        this.color = playerColor;
+    }
+
+    public Color getColor() {
+        return color;
     }
 
     public void addCoin() {

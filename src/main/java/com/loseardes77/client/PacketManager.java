@@ -74,30 +74,25 @@ public class PacketManager {
         }
     }
 
-    public void startListener() {
-        new Thread(() -> {
-            while (!Game.exitThreads) {
-                Packet p = receivePacket();
-                // TODO: Handle packets
-            }
-        }).start();
-
-    }
-
     public void closeSocket() {
         clientSocket.close();
     }
 
-    public void ping() {
+    public int[] ping() {
         Packet p = new Packet(StreamData.Type.PING, String.valueOf(System.currentTimeMillis()));
         Packet response = sendPacket(p);
         if (response == null) {
             error("Failed to ping server");
-            return;
+            return null;
         }
 
-        info("To Server Ping: " + Long.parseLong(response.getData().split(" ")[0]) + "ms");
-        info("From Server Ping: " + (System.currentTimeMillis() - Long.parseLong(response.getData().split(" ")[1])) + "ms");
+        long serverPing = System.currentTimeMillis() - Long.parseLong(response.getData().split(" ")[1]);
+        long clientPing = Long.parseLong(response.getData().split(" ")[0]);
+
+        info("To Server Ping: " + serverPing + "ms");
+        info("From Server Ping: " + clientPing + "ms");
+
+        return new int[]{(int) serverPing, (int) clientPing};
 
     }
 }
