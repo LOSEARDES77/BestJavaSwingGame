@@ -26,7 +26,13 @@ public class MultiPlayer extends JFrame {
     private final PacketManager packetManager;
     private final Game gamePanel;
     private final Player selfPlayer;
-
+	
+	/**
+	 * Creates a new {@link MultiPlayer} object, displaying an error with a {@link JOptionPane}
+	 * @param frame the target frame to display the game and error
+	 * @param InetAddress the host address to connect
+	 * @return the {@link MultiPlayer} object if the connection is sucessfull, null if it isn't
+	 */
     public static MultiPlayer build(MainMenu frame, InetAddress host) {
         try {
             return new MultiPlayer(frame, host);
@@ -36,11 +42,18 @@ public class MultiPlayer extends JFrame {
         }
     }
 
+	/**
+	 * Creates a new {@link MultiPlayer} object
+	 * @param frame the target frame to display the game
+	 * @param InetAddress the host address to connect
+	 * @return the {@link MultiPlayer} object
+	 * @throws {@link SocketException} when the connection is unsuccessful
+	 */
     public MultiPlayer(MainMenu frame, InetAddress host) throws SocketException {
         this.menuFrame = frame;
         this.packetManager = new PacketManager(host);
 
-        packetManager.ping();
+        packetManager.ping();	// The first thing we should do when connecting to a host is pinging it
 
         Color playerColor = JColorChooser.showDialog(null, "Select a player color", new Color((int) (255 * Math.random()), (int) (255 * Math.random()), (int) (255 * Math.random())));
         if (playerColor == null) {
@@ -62,7 +75,7 @@ public class MultiPlayer extends JFrame {
 
         info("Setting up game window");
 
-        setSize(1900, 1060);
+        setSize(1900, 1060); //  KLUDGE Hard-coded res
         setLocationRelativeTo(null);
         setResizable(false);
         setUndecorated(true);
@@ -89,7 +102,11 @@ public class MultiPlayer extends JFrame {
     // TODO: Handle game end
     // TODO: Handle player disconnect
     // TODO: Handle more than one player
-
+	
+	/**
+	 * Starts the game menu
+	 *
+	 */
     public void showGameScreen() {
         Game.exitThreads = false;
         menuFrame.hideMenus();
@@ -99,7 +116,7 @@ public class MultiPlayer extends JFrame {
         readyButton.setFont(new Font("Arial", Font.BOLD, 40));
         readyButton.setBackground(new Color(100, 0, 0));
         gamePanel.addObjectWithoutCollision(readyButton, new Rectangle(622, 380, 656, 300));
-        readyButton.addActionListener(e -> {
+        readyButton.addActionListener(e -> { //  FIXME This should not have ever been written
             readyButton.setText(readyButton.getText().equals("✓ Ready") ? "Not Ready" : "✓ Ready");
             if (readyButton.getText().equals("✓ Ready")) {
                 packetManager.sendPacket(new Packet(StreamData.Type.READY, null));
@@ -132,15 +149,19 @@ public class MultiPlayer extends JFrame {
 
     }
 
+	/**
+	 * Starts the game event listener
+	 *
+	 */
     public void startListener() {
         new Thread(() -> {
             while (!Game.exitThreads) {
                 Packet p = packetManager.receivePacket();
                 switch (p.getType()) {
-                    case MOVE -> {
+                    case MOVE -> { // Movent of a player
                         String[] data = p.getData().split(";");
                         String[] movedPlayerParts = data[0].split(",");
-                        Color movedPlayerColor = new Color(Integer.parseInt(movedPlayerParts[0]), Integer.parseInt(movedPlayerParts[1]), Integer.parseInt(movedPlayerParts[2]));
+                        Color movedPlayerColor = new Color(Integer.parseInt(movedPlayerParts[0]), Integer.parseInt(movedPlayerParts[1]), Integer.parseInt(movedPlayerParts[2])); // Gets the player color of the moved player (used as an uuid)
 
                         if (gamePanel.hasPlayer(movedPlayerColor)) {
                             Player movedPlayer = gamePanel.getPlayer(movedPlayerColor);
@@ -150,16 +171,16 @@ public class MultiPlayer extends JFrame {
                         }
 
                     }
-                    case START_GAME -> {
+                    case START_GAME -> { // Starts the game
                         startGame();
                     }
-                    case MATCH_ENDED -> {
+                    case MATCH_ENDED -> { // When the match ends
                         JOptionPane.showMessageDialog(this, "Game ended", "Game Over", JOptionPane.INFORMATION_MESSAGE);
                         dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
                         destroy();
 
                     }
-                    case PLAYER_JOINED -> {
+                    case PLAYER_JOINED -> { // When a new player joins
                         String[] data = p.getData().split(";");
                         Color newPlayerColor = new Color(Integer.parseInt(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]));
                         if (!gamePanel.hasMatchStarted()) {
@@ -167,7 +188,7 @@ public class MultiPlayer extends JFrame {
                         }
 
                     }
-                    default -> {
+                    default -> { // MAYBE Send a packet to the server telling it to rentransfer last packet
                     }
                 }
             }
@@ -175,13 +196,23 @@ public class MultiPlayer extends JFrame {
 
     }
 
+	/**
+	 * Starts the main game loop
+	 *
+	 */
     public void startGame() {
         gamePanel.startGame();
         selfPlayer.startMovingPLayer();
     }
 
-    public Color setPlayerColor(Color playerColor) {
-        Packet response = packetManager.sendPacket(new Packet(StreamData.Type.JOIN, playerColor.getRed() + ";" + playerColor.getGreen() + ";" + playerColor.getBlue()));
+	/**
+	 * Joins game by changing color
+	 * @param playerColor The color to use for the player (used as an uuid)
+	 * @return the {@link Color} of the newly created player
+	 *
+	 */
+    public Color setPlayerColor(Color playerColor) { // FIXME Refactor this mess
+        Packet response = packetManager.sendPacket(new Packet(StreamData.Type.JOIN, playerColor.getRed() + ";" + playerColor.getGreen() + ";" + playerColor.getBlue())); // There is no change color packet so joining and changing the color is the same
 
         if (response == null) {
             JOptionPane.showMessageDialog(menuFrame, "Failed to set player color", "Error", JOptionPane.ERROR_MESSAGE);
@@ -205,6 +236,10 @@ public class MultiPlayer extends JFrame {
         return finalColor;
     }
 
+	/**
+	 * Stops the game
+	 *
+	 */
     public void destroy() {
         Game.exitThreads = true;
         setVisible(false);
