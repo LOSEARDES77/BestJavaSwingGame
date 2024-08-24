@@ -118,7 +118,7 @@ public class MultiPlayer extends JFrame {
                 int[] pings = packetManager.ping();
                 if (pings != null) {
                     int averagePing = (int) (((double) pings[0] + pings[1]) / 2.0);
-                    pingLabel.setText(String.format("Ping: %02dims", averagePing));
+                    pingLabel.setText(String.format("Ping: %02dms", averagePing));
                 }
                 try {
                     Thread.sleep(1000);
