@@ -21,6 +21,10 @@ public class Player extends JButton {
     private final long delay = 12; // In millis (12ms) tested to be decent
 
     // Multiplayer
+
+	/**
+	 * Used as the {@link Player} uuid
+	 */
     private final Color color;
     private boolean isReady = false;
 
@@ -38,12 +42,17 @@ public class Player extends JButton {
         isReady = ready;
     }
 
-
-    public Player(boolean inputs, Game game, Color playerColor) {
-        if (inputs)
+	/**
+	 * Creates a new {@link Player} 
+	 * @param doInput if the newly created {@link Player} should be controlled by the user
+	 * @param game the {@link Game} instance the player should play in
+	 * @param playerColor the {@link Color} of the player (used as an uuid in multiplayer)
+	 */
+    public Player(boolean doInput, Game game, Color playerColor) {
+        if (doInput)
             startInputDetection();
 
-        if (isLightColor(playerColor))
+        if (isLightColor(playerColor)) // Changes the font color depending if the player color is dark or light
             setForeground(Color.BLACK);
         else
             setForeground(Color.WHITE);
@@ -51,7 +60,7 @@ public class Player extends JButton {
         this.game = game;
         setFocusable(false);
         setBackground(playerColor);
-        setText("^_^");
+        setText("^_^");			// FIXME Change icons
         setFont(new Font("Arial", Font.PLAIN, 10));
         this.color = playerColor;
     }
@@ -76,8 +85,14 @@ public class Player extends JButton {
         this.health = health;
     }
 
+	/**
+	 * Tries to move the player to a new location
+	 * @param x the x position to try to move the player to
+	 * @param y the y position to try to move the player to
+	 * @return {@code True} if the movement was successful {@code False} if it wasn't
+	 */
     public boolean teleport(int x, int y) {
-        if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this)) {
+        if (game.checkCollision(new Rectangle(x, y, getWidth(), getHeight()), this)) { // Checks collision with other objects of the game-field
             return false;
         } else {
             setLocation(x, y);
@@ -85,6 +100,11 @@ public class Player extends JButton {
         }
     }
 
+	/**
+	 * Moves the player by an ammount (will move it to a nearby location if the requested one is occupied by another object)
+	 * @param dX the delta x to move try the player by
+	 * @param dY the delta y to move try the player by
+	 */
     public void movePlayer(int dX, int dY) {
         int x = getX();
         int y = getY();
@@ -100,6 +120,10 @@ public class Player extends JButton {
         }
     }
 
+	/**
+	 * Gets the angle of movement based in the users input
+	 *
+	 */
     public double movementAngle() {
         int dX = 0;
         int dY = 0;
@@ -116,25 +140,30 @@ public class Player extends JButton {
         return Math.atan2(dY, dX);
     }
 
+	
     public void stopInputDetection() {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keyEventDispatcher);
     }
 
+	/**
+	 * uses the {@link KeyboardFocusManager} to update the {@code inputMap} for movement
+	 *
+	 */
     public void startInputDetection() {
         keyEventDispatcher = (e) -> {
             if (e.getID() == KeyEvent.KEY_PRESSED || e.getID() == KeyEvent.KEY_RELEASED) {
                 boolean eventType = e.getID() == KeyEvent.KEY_PRESSED;
 
-                if (e.getKeyCode() == KeyEvent.VK_W)
+                if (e.getKeyCode() == KeyEvent.VK_W) // W
                     inputMap[0] = eventType;
 
-                if (e.getKeyCode() == KeyEvent.VK_S)
+                if (e.getKeyCode() == KeyEvent.VK_S) // S
                     inputMap[2] = eventType;
 
-                if (e.getKeyCode() == KeyEvent.VK_A)
+                if (e.getKeyCode() == KeyEvent.VK_A) // A
                     inputMap[1] = eventType;
 
-                if (e.getKeyCode() == KeyEvent.VK_D)
+                if (e.getKeyCode() == KeyEvent.VK_D) // D
                     inputMap[3] = eventType;
 
 
@@ -144,6 +173,10 @@ public class Player extends JButton {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyEventDispatcher);
     }
 
+	/**
+	 * Creates a {@link Thread} that manages player movement
+	 *
+	 */
     public void startMovingPLayer() {
         Thread movement = new Thread(() -> {
             while (!Game.exitThreads) {

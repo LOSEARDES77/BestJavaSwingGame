@@ -8,14 +8,32 @@ import java.awt.Color;
 import java.awt.Rectangle;
 
 public class Enemy extends JButton {
+	/**
+	 * The game instamce the enemy will be acting in
+	 */
     private Game game = null;
 
     //  Movement
+	/**
+	 * The direction in which to move the enemy [0] is Right or left and [1] is Up and down
+	 */
     private final boolean[] axis;
 
+	/**
+	 * Increments each time a movement is tried
+	 */
     private int counter = 0;
+
+	/**
+	 * Is a random interval of movement tries before changing the heading
+	 */
     private int change = 0;
 
+	/**
+	 * Creates a new enemy 
+	 * @param gameInstance the {@link Game} the enemy will be acting in
+	 * @param bounds the bounds of the {@link Enemy}
+	 */
     public Enemy(Game gameInstance, Rectangle bounds) {
 
         if (game == null) {
@@ -30,7 +48,7 @@ public class Enemy extends JButton {
         setForeground(new Color(0, 0, 0));
         setSize(50, 50);
     }
-
+	
     private Rectangle genRandomPosition() {
         int size = 50;
         Rectangle r;
@@ -44,7 +62,25 @@ public class Enemy extends JButton {
         return r;
     }
 
+	/**
+	 * The enemy movement code
+	 *
+	 */
     protected void move() {
+		/*
+		  The enemy movement ai is ruled by two variables:
+		    Couter - Increments each time a movement is tried
+		    Change - Is a random interval of movement tries before changing the heading
+		
+		  Each time a movement is tried counter is incremented and tested against change
+		  If it is, Counter gets reset to 0 and change gets set to a random integer and a new
+		  heading is determinated by seting axis[0] and axis[1] to a random boolean
+		    Axis[0] - Right or left
+			Axis[1] - Up or down
+
+		  Then we try to move the enemy using the values of axis, if we can't we invert them
+		*/
+		
         if (++counter > change) {
             axis[0] = game.getRandom().nextBoolean();
             axis[1] = game.getRandom().nextBoolean();
@@ -81,6 +117,11 @@ public class Enemy extends JButton {
         }
     }
 
+	/**
+	 * Tries to move the {@link Enemy} in a {@link Direction}
+	 * @param d a {@link Direction}
+	 * @returns {@code true} if the movement was UNSUCCESSFUL or {@code false} if it was SUCCESSFUL
+	 */
     private boolean moveEnemy(Direction d) {
 
         int speed = 3;
@@ -105,7 +146,7 @@ public class Enemy extends JButton {
         }
         Rectangle r = new Rectangle(x, y, getWidth(), getHeight());
         if (game.checkCollision(r, this, game.getSelfPlayer()))
-            return true;
+            return true;		// FIXME Why return true when it wasn't successful
 
         if (game.checkCollisionWithEnemies(r, this))
             return true;

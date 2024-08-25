@@ -30,17 +30,30 @@ import static com.loseardes77.common.Logger.warning;
 public class Game extends JPanel {
 
     private static final JLabel dummy = new JLabel("");
+
+	/**
+	 * When to exit threded code
+	 */
     protected static boolean exitThreads = true;
-    private final int[] windowDimensions = {1900, 1060};
+    private final int[] windowDimensions = {1900, 1060}; //  FIXME hard coded res
     private final List<Component> Objects = new CopyOnWriteArrayList<>();
     private final List<Enemy> enemies = new CopyOnWriteArrayList<>();
     private final List<Coin> coins = new CopyOnWriteArrayList<>();
     private final Random random;
+
+	/**
+	 * The {@link Player} that controls the game
+	 */
     private Player selfPlayer;
     private final JFrame frame;
     private final JLabel healthLabel;
     private final ThreadPool pool;
     private final JLabel scoreLabel;
+
+	/**
+	 * Speed at which to spawn coins (in ms)
+	 *
+	 */
     private static final int COIN_GENERATION_SPEED = 500;
 
     // Multiplayer
@@ -54,7 +67,7 @@ public class Game extends JPanel {
         setLayout(new BorderLayout());
         setBounds(0, 0, windowDimensions[0], windowDimensions[1]);
 
-        this.healthLabel = new JLabel("100 HP");
+        this.healthLabel = new JLabel("100 HP"); // FIXME hard coded max hp
         healthLabel.setFont(new Font("Arial", Font.BOLD, 20));
         FontMetrics healthLabelMetrics = healthLabel.getFontMetrics(healthLabel.getFont());
         Dimension healthLabelSize = new Dimension(healthLabelMetrics.stringWidth(healthLabel.getText()), healthLabelMetrics.getHeight());
@@ -111,8 +124,11 @@ public class Game extends JPanel {
         this(frame, true, true, true);
     }
 
+	/**
+	 * Generates 5 coins in random position
+	 */
     private void addCoins() {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) { // FIXME Hard coded coin spawn count 
             Rectangle pos;
             do {
                 pos = new Rectangle(
@@ -128,6 +144,11 @@ public class Game extends JPanel {
         }
     }
 
+	/**
+	 * Adds a player to the game
+	 * @param player the {@link Player} to add
+	 * @param isSelf if the added player is the one that is controlling the game
+	 */
     public void addPlayer(Player player, boolean isSelf) {
         if (isSelf) {
             this.selfPlayer = player;
@@ -135,11 +156,20 @@ public class Game extends JPanel {
         this.players.put(player.getColor(), player);
     }
 
+	/**
+	 * Adds a player to the game
+	 * @param player the {@link Player} to add
+	 */	
     public void addPlayer(Player player) {
         this.selfPlayer = player;
         addObject(player, genRandomPosition(50));
     }
 
+	/**
+	 * Gets a random position inside the gamefield of a specified size
+	 * @param size the size of the requested random position
+	 * @return a rectangle of the given size that is in a random position
+	 */
     public Rectangle genRandomPosition(int size) {
         Rectangle r;
         do {
@@ -157,10 +187,20 @@ public class Game extends JPanel {
         return selfPlayer;
     }
 
+	/**
+	 * Gets a player from a color (used as an uuid)
+	 * @param c the {@link Color} of the player to search
+	 * @return {@code null} if the player isn't found, a {@link Player} if it is
+	 */
     public Player getPlayer(Color c) {
         return players.get(c);
     }
 
+	/**
+	 * Check if a player of a color (used as an uuid) exists in the game
+	 * @param c the {@link Color} of the player to search
+	 * @return {@code true} if the player was found, {@code false} if it wasn't
+	 */
     public boolean hasPlayer(Color c) {
         return players.containsKey(c);
     }
@@ -173,6 +213,13 @@ public class Game extends JPanel {
         return pool;
     }
 
+	/**
+	 * Checks if a rectangle doesn't collide with itself or the player
+	 * @param r the {@link Rectangle} to check for collision
+	 * @param self the {@link Component} that is checking for collision
+	 * @param player the {@link Player} to check collisuon against
+	 * @return {@code true} if they collide, {@code false} if they don't
+	 */
     public boolean checkCollision(Rectangle r, Component self, Player player) {
         if (r.getX() < 0 || r.getY() < 0 || r.getX() + r.getWidth() > windowDimensions[0] || r.getY() + r.getHeight() > windowDimensions[1])
             return true;
@@ -188,10 +235,23 @@ public class Game extends JPanel {
         return false;
     }
 
+	/**
+	 * Checks for collision between a rectangle and a component  
+	 * @param r the {@link Rectangle} to test for collision
+	 * @param self a {@link Component} to test for collision
+	 * @return {@code true} if they collide, {@code false} if they don't
+	 */
     public boolean checkCollision(Rectangle r, Component self) {
         return checkCollision(r, self, null);
     }
 
+	
+    /**
+	 * Checks for the collision between a rectangle and enemies 
+     * @param r the {@link Rectangle} to check collision in
+     * @param self a component to spare from the check
+     * @return {@code true} if they collide, {@code false} if they don't
+     */
     public boolean checkCollisionWithEnemies(Rectangle r, Component self) {
         for (Enemy e : enemies) {
             if (!e.equals(self) && r.intersects(e.getBounds())) {
@@ -215,7 +275,10 @@ public class Game extends JPanel {
         repaint();
         info("Added " + comp.getClass().getSimpleName() + " at " + bounds.x + ", " + bounds.y + " with size " + bounds.width + "x" + bounds.height);
     }
-
+	
+    /**
+     * Starts the game, starting moving the player, the enemies and generating coins
+     */
     public void startGame() {
         this.hasMatchStarted = true;
         Game.exitThreads = false;
@@ -235,7 +298,9 @@ public class Game extends JPanel {
     private void startCoinGeneration() {
         Thread coinGen = new Thread(() -> {
             while (!Game.exitThreads) {
-                if (coins.size() < 35)
+                if (coins.size() < 35) // Test that there are no more than 35 coins
+					
+					// generates a new coin in a random location
                     pool.execute(() -> {
                         if (getRandom().nextFloat() > 0.8) {
                             Rectangle pos;
@@ -273,6 +338,9 @@ public class Game extends JPanel {
 
     }
 
+    /**
+     * For some freak reason this func does the checks for player-coin collision
+     */
     private Thread coinGenThread() {
         Thread coinCol = new Thread(() -> {
             while (!Game.exitThreads) {
@@ -299,7 +367,10 @@ public class Game extends JPanel {
         return coinCol;
     }
 
-    private void updateCoins() {
+	/**
+	 * Updates the player coin counter
+	 */
+    private void updateCoins() { //  MAYBE This shouldn't be in the game class
         getSelfPlayer().addCoin();
         scoreLabel.setText(getSelfPlayer().getCoinsCount() + " Coins");
         scoreLabel.repaint();
@@ -313,7 +384,7 @@ public class Game extends JPanel {
 
     public void buildWalls() {
         info("Building walls");
-        Wall[] ws = new Wall[]{
+        Wall[] ws = new Wall[]{ //  FIXME Hard coded walls
                 new Wall(100, 100, 100, 100),
                 new Wall(100, getHeight() - 200, 100, 100),
                 new Wall(getWidth() - 500, 100, 100, 100),
@@ -407,7 +478,7 @@ public class Game extends JPanel {
                 if (elapsedTime < ENEMY_MOVE_DELAY) {
                     try {
                         Thread.sleep(ENEMY_MOVE_DELAY - elapsedTime);
-                    } catch (InterruptedException _) {
+                    } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
                 }

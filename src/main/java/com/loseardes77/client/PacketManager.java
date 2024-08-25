@@ -16,9 +16,14 @@ public class PacketManager {
     private final InetAddress address;
     private final DatagramSocket clientSocket;
 
+	/**
+	 * Creates a new client socket for the specified address
+	 * @param address an {@link InetAddress} to connect to
+	 * @throws {@link SocketException} when the {@link DatagramSocket} creation fails
+	 */
     public PacketManager(InetAddress address) throws SocketException {
         try {
-            this.serverPort = 5784;
+            this.serverPort = 5784; // FIXME Hardcoded port
             this.clientSocket = new DatagramSocket();
             this.address = address;
         } catch (SocketException e) {
@@ -27,9 +32,14 @@ public class PacketManager {
         }
     }
 
+	/**
+	 * Sends a {@link Packet} through the net
+	 * @param p The {@link Packet} to send
+	 * @return the {@link Packet} that is sent as a respone or null if the packet was invalid or if it wasn't able to send it
+	 */
     public Packet sendPacket(Packet p) {
         info("Sending [" + p.getType() + "] packet: " + p.getData());
-        if (!p.isValid()) {
+        if (!p.isValid()) {		// Checks for invalid packets 
             error("Invalid packet : " + p.getRawData());
             return null;
         }
@@ -48,11 +58,15 @@ public class PacketManager {
 
         return receivePacket();
     }
-
+	
+	/**
+	 * Waits to recive a {@link Packet}
+	 * @return The recived {@link Packet} or {@code null} if there was an error while reciving the {@link Packet}
+	 */
     public Packet receivePacket() {
         info("Awaiting to receive packet");
-        try {
-            byte[] receiveData = new byte[512];
+        try {									//  FIXME Gigantic try block
+            byte[] receiveData = new byte[512]; // KLUDGE Hard coded 512 byte max packet size
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             clientSocket.receive(receivePacket);
 
@@ -60,7 +74,7 @@ public class PacketManager {
             info("Received data: " + data);
             StreamData.Type type = StreamData.getTypeFromData(data);
             Packet p;
-            if (data.length() <= 16) {
+            if (data.length() <= 16) { // Diferentes between pakcets with a dataStr or without it
                 p = new Packet(type, null);
             } else {
                 String dataStr = data.substring(16);
@@ -78,10 +92,14 @@ public class PacketManager {
         clientSocket.close();
     }
 
+	/**
+	 * Pings the server
+	 * @return A vector, with the first number being the serverPing and the second being the clientPing
+	 */
     public int[] ping() {
         Packet p = new Packet(StreamData.Type.PING, String.valueOf(System.currentTimeMillis()));
         Packet response = sendPacket(p);
-        if (response == null) {
+        if (response == null) {	// MAYBE throw an exception
             error("Failed to ping server");
             return null;
         }
