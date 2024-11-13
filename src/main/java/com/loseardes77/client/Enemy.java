@@ -111,7 +111,7 @@ public class Enemy extends JButton {
                 result = moveEnemy(Direction.UP);
             }
         }
-        if (result) {
+        if (!result) {
             axis[1] = !axis[1];
             axis[0] = !axis[0];
         }
@@ -146,15 +146,15 @@ public class Enemy extends JButton {
         }
         Rectangle r = new Rectangle(x, y, getWidth(), getHeight());
         if (game.checkCollision(r, this, game.getSelfPlayer()))
-            return true;		// FIXME Why return true when it wasn't successful
+            return false;
 
         if (game.checkCollisionWithEnemies(r, this))
-            return true;
+            return false;
 
         setLocation(x, y);
 
 
-        return false;
+        return true;
     }
 
     public void swapLocation() {

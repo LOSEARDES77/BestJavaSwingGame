@@ -88,7 +88,8 @@ public class MainMenu extends JFrame {
         joinButton.setFont(new Font("Arial", Font.BOLD, 18));
         joinButton.addActionListener(_ -> startMultiplayer(hostInputBox.getText()));
 
-        /* TODO
+        //TODO Option to host own server
+        /*
         JButton hostButton = new JButton("Host your own");
         multiplayerSelectorPanel.add(hostButton);
         hostButton.setBounds(390, 270, 170, 60);

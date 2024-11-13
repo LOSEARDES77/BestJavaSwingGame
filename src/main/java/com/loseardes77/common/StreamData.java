@@ -22,7 +22,8 @@ public class StreamData {
         OK,             // Everything is fine
         ERROR,          // Something went wrong
         PING,           // Check the ping
-        PLAYER_JOINED,    // A player joined
+        PLAYER_JOINED,  // A player joined
+        DISCONNECT,     // Self disconnect
     }
 
 

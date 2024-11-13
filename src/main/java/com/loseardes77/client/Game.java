@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.loseardes77.common.Logger.error;
@@ -447,47 +450,32 @@ public class Game extends JPanel {
     }
 
     public void setupEnemyMovementThread() {
-        //  TODO: Optimize this
-        new Thread(() -> {
-            final long ENEMY_MOVE_DELAY = 30; // In mills
-            while (!Game.exitThreads) {
-                long startTime = System.currentTimeMillis();
-                AtomicBoolean endGame = new AtomicBoolean(false);
-                for (Enemy e : enemies) {
-                    pool.execute(() -> {
-                        e.move();
-                        Rectangle playerHitBox = getSelfPlayer().getBounds();
-                        if (playerHitBox.intersects(e.getBounds())) {
-                            byte health = (byte) (getSelfPlayer().getHealth() - 10);
-                            getSelfPlayer().setHealth(health);
-                            updateHealthLabel(health);
-                            e.swapLocation();
-                            if (health <= 0) {
-                                endGame.set(true);
-                            }
-                        }
-                    });
-
-                }
-                pool.join();
-                if (endGame.get()) {
-                    end(false);
-                }
-                long elapsedTime = System.currentTimeMillis() - startTime;
-
-                if (elapsedTime < ENEMY_MOVE_DELAY) {
-                    try {
-                        Thread.sleep(ENEMY_MOVE_DELAY - elapsedTime);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+        final long ENEMY_MOVE_DELAY = 30; // In mills
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+            long startTime = System.currentTimeMillis();
+            boolean endGame = false;
+            Rectangle playerHitBox = getSelfPlayer().getBounds();
+            for (Enemy e : enemies) {
+                e.move();
+                if (playerHitBox.intersects(e.getBounds())) {
+                    byte health = (byte) (getSelfPlayer().getHealth() - 10);
+                    getSelfPlayer().setHealth(health);
+                    updateHealthLabel(health);
+                    e.swapLocation();
+                    if (health <= 0) {
+                        endGame = true;
                     }
                 }
-
-                if (elapsedTime > ENEMY_MOVE_DELAY + 10) {
-                    warning("Enemy movement took too long (" + (elapsedTime - ENEMY_MOVE_DELAY) + "ms more)");
-                }
             }
-            info("Stopping enemy movement Thread");
-        }).start();
+            if (endGame) {
+                scheduler.shutdown();
+                end(false);
+            }
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            if (elapsedTime > ENEMY_MOVE_DELAY + 10) {
+                warning("Enemy movement took too long (" + (elapsedTime - ENEMY_MOVE_DELAY) + "ms more)");
+            }
+        }, 0, ENEMY_MOVE_DELAY, TimeUnit.MILLISECONDS);
     }
 }

@@ -241,6 +241,7 @@ public class MultiPlayer extends JFrame {
 	 *
 	 */
     public void destroy() {
+        packetManager.sendPacket(new Packet(StreamData.Type.DISCONNECT, ""));
         Game.exitThreads = true;
         setVisible(false);
         gamePanel.getPool().shutdown();
